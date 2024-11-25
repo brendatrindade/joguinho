@@ -221,6 +221,7 @@ int get_direcao_movimento_x(){
     return 0; // sem movimento   
 }
 
+//Movimento para cima e para baixo
 int get_direcao_movimento_y(){
    int16_t y_bruto;
    float y_g;
