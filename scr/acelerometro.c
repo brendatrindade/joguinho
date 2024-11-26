@@ -205,20 +205,64 @@ int desmapear_memoria(){
     return 0;
 }
 
-int get_direcao_movimento_x(){
-    int16_t x_bruto;
-    float x_g;
+// Define a velocidade com base na aceleração
+int define_velocidade(float valor_g) {
+   if (valor_g < (5 * FILTRO_MOVIMENTO)) {
+      return 1; //velocidade baixa
+   } else if (valor_g < (10 * FILTRO_MOVIMENTO)) {
+      return 2; //velocidade media
+   } else {
+      return 3; //velocidade alta
+   }
+}
 
-    ler_aceleracao_x(&x_bruto);
+//8 cima, 2 baixo, 6 direita, 4 esquerda, 0 sem movimento
+int get_movimento(*velocidade){
+   int16_t x_bruto, y_bruto;
+   float x_g, y_g;
 
-    x_g = (x_bruto - offset_x) * (mg_por_lsb / 1000.0);
+   ler_aceleracao_x(&x_bruto);
+   ler_aceleracao_y(&y_bruto);
 
-    if (x_g > FILTRO_MOVIMENTO) {
-        return 1;  // direita
-    } else if (x_g < -FILTRO_MOVIMENTO) {
-        return -1; // esquerda
-    } 
-    return 0; // sem movimento   
+   x_g = (x_bruto - offset_x) * (mg_por_lsb / 1000.0);
+   y_g = (y_bruto - offset_y) * (mg_por_lsb / 1000.0);
+
+   if (x_g > FILTRO_MOVIMENTO || y_g > FILTRO_MOVIMENTO ){
+      if (x_g > y_g) { //movimento no eixo x+
+         *velocidade = define_velocidade(x_g);
+         return 6; // x - direcao para direita
+      } else if (y_g > x_g){ //movimento no eixo y+
+         *velocidade = define_velocidade(y_g);
+         return 8; // y - direcao para cima
+      }
+   } else if (x_g < -FILTRO_MOVIMENTO || y_g < -FILTRO_MOVIMENTO ){
+      if ( x_g < y_g ){ //movimento no eixo x-
+         *velocidade = define_velocidade(-x_g);
+         return 4; // x - direcao para esquerda
+      } else if (y_g < x_g){ //movimento no eixo y-
+         *velocidade = define_velocidade(y_g);
+         return 2; //y - direcao para baixo
+      }
+   }
+   return 0; //sem movimento   
+}
+
+int get_direcao_movimento_x(int *velocidade){
+   int16_t x_bruto;
+   float x_g;
+
+   ler_aceleracao_x(&x_bruto);
+
+   x_g = (x_bruto - offset_x) * (mg_por_lsb / 1000.0);
+
+   if (x_g > FILTRO_MOVIMENTO) {
+      *velocidade = define_velocidade(x_g);
+      return 1; // direita
+   } else if (x_g < -FILTRO_MOVIMENTO) {
+      *velocidade = define_velocidade(-x_g);
+      return -1; // esquerda
+   } 
+   return 0; // sem movimento   
 }
 
 //Movimento para cima e para baixo
@@ -231,22 +275,10 @@ int get_direcao_movimento_y(int *velocidade){
    y_g = (y_bruto - offset_y) * (mg_por_lsb / 1000.0);
 
    if (y_g > FILTRO_MOVIMENTO) {
-      if (y_g < (5*FILTRO_MOVIMENTO)) {
-         *velocidade = 1; // velocidade baixa
-      } else if (y_g < (10*FILTRO_MOVIMENTO)) {
-         *velocidade = 2; // velocidade media
-      } else {
-         *velocidade = 3; // velocidade alta
-      }
+      *velocidade = define_velocidade(y_g);
       return 1; // direcao para cima
    } else if (y_g < -FILTRO_MOVIMENTO) {
-      if (y_g < (5*-FILTRO_MOVIMENTO)) {
-         *velocidade = 1; // velocidade baixa
-      } else if (y_g < (10*-FILTRO_MOVIMENTO)) {
-         *velocidade = 2; // velocidade media
-      } else {
-         *velocidade = 3; // velocidade alta
-      }
+      *velocidade = define_velocidade(-y_g);
       return -1; // direcao para baixo
    } 
    return 0; // sem movimento   
