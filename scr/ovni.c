@@ -117,6 +117,21 @@ void cria_sprite(uint16_t end_base, uint16_t dados_do_sprite[altura_sprite][larg
     }
 }
 
+void gera_sprite_ovni(){
+    //Dados para formar um sprite 20x20 em formato RRR GGG BBB - 9 bits
+    uint16_t dados_do_sprite[altura_sprite][largura_sprite];
+
+    int y, x;
+    for ( y = 0; y < altura_sprite; y++) {
+        for ( x = 0; x < largura_sprite; x++) {
+            dados_do_sprite[y][x] = converte_em_bgr(dados_da_imagem[y][x]);//Converte pixel por pixel do formato RGB para o BGR
+        }
+    }
+
+    //Escreve os dados de cada pixel na memoria de sprites. [end_base = offset * 400]
+    cria_sprite(1600, dados_do_sprite);
+}
+
 //Exibe e move um sprite armazenado na memoria de sprites pela tela
 void move_sprite() {
     #define mascara_10bits 0b1111111111
@@ -135,11 +150,11 @@ void move_sprite() {
 
     while (i < 1000) {
         //apaga o sprite exibido na posicao anterior
-        exibe_sprite(0, pos_xy_20b_ant, 5, 1);//sp = 0 - desabilita sprite
+        exibe_sprite(0, pos_xy_20b_ant, 4, 1);//sp = 0 - desabilita sprite
         pos_xy_20b_ant = pos_xy_20b;
     
         //exibe o sprite na posicao atual
-        exibe_sprite(1, pos_xy_20b, 5, 1);//sp = 1 - habilita sprite
+        exibe_sprite(1, pos_xy_20b, 4, 1);//sp = 1 - habilita sprite
 
         //verifica os limites da tela para ajustar a direcao
         //tela 640 x 480
@@ -189,6 +204,8 @@ void move_sprite_acel() {
 
     int i = 0;
 
+    gera_sprite_ovni();
+
     while (i != -1) {
         pos_y = (pos_xy_20b & mascara_10bits);
         pos_x = ((pos_xy_20b >> 10) & mascara_10bits);
@@ -196,11 +213,11 @@ void move_sprite_acel() {
         direcao_sprite = get_movimento(&velocidade); //8 cima, 2 baixo, 6 direita, 4 esquerda, 0 sem movimento
 
         //apaga o sprite exibido na posicao anterior
-        exibe_sprite(0, pos_xy_20b_ant, 5, 1);//sp = 0 - desabilita sprite
+        exibe_sprite(0, pos_xy_20b_ant, 4, 1);//sp = 0 - desabilita sprite
         pos_xy_20b_ant = pos_xy_20b;
     
         //exibe o sprite na posicao atual
-        exibe_sprite(1, pos_xy_20b, 5, 1);//sp = 1 - habilita sprite
+        exibe_sprite(1, pos_xy_20b, 4, 1);//sp = 1 - habilita sprite
 
         //descendo
         if ( direcao_sprite == 2 ){
