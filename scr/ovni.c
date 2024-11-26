@@ -1,5 +1,5 @@
 #include "proc_grafico.h"
-#include "../joguinho/scr/acelerometro.c"
+#include "acelerometro.c"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -30,7 +30,6 @@ uint8_t dados_da_imagem[altura_sprite][largura_sprite] = {
 { 0xff,0xff,0xff,0xff,0xdb,0xb7,0x97,0x97,0x97,0x97,0x97,0x97,0x97,0x97,0xb7,0xbb,0xff,0xff,0xff,0xff },
 { 0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xdf,0xdf,0xdb,0xdb,0xdf,0xdf,0xff,0xff,0xff,0xff,0xff,0xff,0xff }
 };
-
 
 //Converte os dados da imagem de RGB para BGR 9 bits - formato da instrucao wsm
 uint16_t converte_em_bgr(uint8_t rgb) {
@@ -116,10 +115,15 @@ void move_sprite() {
     }
 }
 
-
 //Exibe e move um sprite armazenado na memoria de sprites pela tela controlado pelo acelerometro
 void move_sprite_acel() {
- #define mascara_10bits 0b1111111111
+    // tela 640 x 480 
+    #define mascara_10bits 0b1111111111
+    #define limite_superior_eixoY 10
+    #define limite_inferior_eixoY 450
+    #define limite_esquerdo_eixoX 10
+    #define limite_direito_eixoX 610
+
     uint16_t pos_x = 350;
     uint16_t pos_y = 240;
 
@@ -128,9 +132,68 @@ void move_sprite_acel() {
     
     uint32_t pos_xy_20b;
     pos_xy_20b = (pos_x << 10 | pos_y);
+    
     uint32_t pos_xy_20b_ant = (pos_xy_20b); //inicia com posicao anterior igual a posicao atual
 
-    int direcao_y_sprite = -get_direcao_movimento_y(); //1 descendo e -1 subindo
+    int velocidade = 1;
+    int direcao_y_sprite = -get_direcao_movimento_y(&velocidade); //1 descendo e -1 subindo
+
+    int i = 0;
+
+    while (i != -1) {
+        pos_y = (pos_xy_20b & mascara_10bits);
+        pos_x = ((pos_xy_20b >> 10) & mascara_10bits);
+
+        //apaga o sprite exibido na posicao anterior
+        exibe_sprite(0, pos_xy_20b_ant, 5, 1);//sp = 0 - desabilita sprite
+        pos_xy_20b_ant = pos_xy_20b;
+    
+        //exibe o sprite na posicao atual
+        exibe_sprite(1, pos_xy_20b, 5, 1);//sp = 1 - habilita sprite
+
+        //descendo
+        if ( direcao_y_sprite == 1 ){
+            if (pos_y < limite_inferior_eixoY) {
+                pos_y += (10*velocidade);//posicao atual + 10 * (1,2 ou 3)
+            } else {
+                pos_y == limite_inferior_eixoY; //fica no limite da tela
+            }
+        }
+        //subindo
+        else if ( direcao_y_sprite == -1 ){
+            if (pos_y > limite_superior_eixoY) {
+                pos_y -= (10*velocidade);//posicao atual + 10 * (1,2 ou 3)
+            } else {
+                pos_y == limite_superior_eixoY; //fica no limite da tela
+            }
+        }
+
+        pos_xy_20b = (pos_x << 10 | pos_y);
+        usleep(10000);
+        i++;
+    }
+}
+
+/*
+//Exibe e move um sprite armazenado na memoria de sprites pela tela controlado pelo acelerometro
+void move_sprite_acel() {
+    #define mascara_10bits 0b1111111111
+    #define limite_superior_eixoY 450
+    #define limite_inferior_eixoY 10
+
+    uint16_t pos_x = 350;
+    uint16_t pos_y = 240;
+
+    pos_x &= mascara_10bits;
+    pos_y &= mascara_10bits;
+    
+    uint32_t pos_xy_20b;
+    pos_xy_20b = (pos_x << 10 | pos_y);
+
+    uint32_t pos_xy_20b_ant = (pos_xy_20b); //inicia com posicao anterior igual a posicao atual
+
+    int velocidade = 1;
+    int direcao_y_sprite = -get_direcao_movimento_y(&velocidade); //1 descendo e -1 subindo
 
     int i = 0;
 
@@ -145,16 +208,15 @@ void move_sprite_acel() {
         //verifica os limites da tela para ajustar a direcao
         //tela 640 x 480
         if (direcao_y_sprite == 1 && (pos_xy_20b < 358850) ){
-            pos_xy_20b+= 10;//posicao atual + 10
+            pos_xy_20b+= (10*velocidade);//posicao atual + 10 * (1,2 ou 3)
             if(pos_xy_20b == 358850){
                 //101011110 0111000010 -> x = 0101011110 = 350, y = 0111000010 = 450
                 //direcao_y_sprite = -1;
                 pos_xy_20b == 358850; //fica no limite da tela
             }
         }
-
         else if (direcao_y_sprite == -1 && (pos_xy_20b > 358410) ){
-            pos_xy_20b-=10;//posicao atual - 10
+            pos_xy_20b-= (10*velocidade);//posicao atual - 10 * (1,2 ou 3)
             if(pos_xy_20b == 358410){
                 //0101011110 0000001010 -> x = 0101011110 = 350, y = 0000001010 = 10
                 //direcao_y_sprite = 1;
@@ -164,4 +226,4 @@ void move_sprite_acel() {
         usleep(10000);
         i++;
     }
-}
+}*/

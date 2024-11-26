@@ -222,7 +222,7 @@ int get_direcao_movimento_x(){
 }
 
 //Movimento para cima e para baixo
-int get_direcao_movimento_y(){
+int get_direcao_movimento_y(int *velocidade){
    int16_t y_bruto;
    float y_g;
 
@@ -231,9 +231,23 @@ int get_direcao_movimento_y(){
    y_g = (y_bruto - offset_y) * (mg_por_lsb / 1000.0);
 
    if (y_g > FILTRO_MOVIMENTO) {
-      return 1;  // cima
+      if (y_g < (5*FILTRO_MOVIMENTO)) {
+         *velocidade = 1; // velocidade baixa
+      } else if (y_g < (10*FILTRO_MOVIMENTO)) {
+         *velocidade = 2; // velocidade media
+      } else {
+         *velocidade = 3; // velocidade alta
+      }
+      return 1; // direcao para cima
    } else if (y_g < -FILTRO_MOVIMENTO) {
-      return -1; // baixo
+      if (y_g < (5*-FILTRO_MOVIMENTO)) {
+         *velocidade = 1; // velocidade baixa
+      } else if (y_g < (10*-FILTRO_MOVIMENTO)) {
+         *velocidade = 2; // velocidade media
+      } else {
+         *velocidade = 3; // velocidade alta
+      }
+      return -1; // direcao para baixo
    } 
    return 0; // sem movimento   
 }
