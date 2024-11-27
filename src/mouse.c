@@ -18,7 +18,8 @@ int abre_mouse() {
     return fd;
 }
 
-void le_mouse(int fd) {
+// muito sensivel
+int le_mouse_orientacao(int fd) {
     struct input_event ie;
     int x = 0, y = 0;
     
@@ -29,18 +30,41 @@ void le_mouse(int fd) {
         }
 
         if (ie.type == EV_REL) {
-            if (ie.code == REL_X) {
-                x = ie.value;
-                printf("Movimento horizontal: %d\n", x);
+            if (ie.code == REL_X) { 
+                x = ie.value; // direita = 1; esquerda = -1
+                return x;
             } else if (ie.code == REL_Y) {
-                y = ie.value;
-                printf("Movimento vertical: %d\n", y);
+                y = ie.value; // baixo = 1; cima = -1
+                return y;
             }
         }
     }
 }
 
-void le_mouse1(int fd) {
+// muito sensivel
+int le_mouse_direcao(int fd) {
+    struct input_event ie;
+    int x = 0, y = 0;
+    
+    while (1) {
+        if (read(fd, &ie, sizeof(ie)) != sizeof(ie)) {
+            perror("Erro ao ler o evento");
+            break;
+        }
+
+        if (ie.type == EV_REL) {
+            if (ie.code == REL_X) { 
+                printf("\nMovimento horizontal");
+                return 0;
+            } else if (ie.code == REL_Y) {
+                printf("\nMovimento vertical");
+                return 1;
+            }
+        }
+    }
+}
+
+int teste_leitura(int fd) {
     struct input_event ie;
     int x = 0, y = 0;
     
@@ -53,10 +77,10 @@ void le_mouse1(int fd) {
         if (ie.type == EV_REL) {
             if (ie.code == REL_X) {
                 x = ie.value;
-                //printf("Movimento horizontal: %d\n", x);
+                return x, y;
             } else if (ie.code == REL_Y) {
                 y = ie.value;
-                //printf("Movimento vertical: %d\n", y);
+                return x, y;
             }
         }
     }
@@ -78,15 +102,15 @@ int teste() {
     return 0;
 }
 
-int main() {
-    int fd = abre_mouse();
-    if (fd != -1) {
-        le_mouse(fd);
-        close(fd);
-    }
+// int main() {
+//     int fd = abre_mouse();
+//     if (fd != -1) {
+//         le_mouse(fd);
+//         close(fd);
+//     }
     
-    return 0;
-}
+//     return 0;
+// }
 
 /*
 struct input_event {

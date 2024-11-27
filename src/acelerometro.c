@@ -217,7 +217,7 @@ int define_velocidade(float valor_g) {
 }
 
 //8 cima, 2 baixo, 6 direita, 4 esquerda, 0 sem movimento
-int get_movimento(*velocidade){
+int get_movimento(int *velocidade){
    int16_t x_bruto, y_bruto;
    float x_g, y_g;
 

@@ -54,15 +54,9 @@ void cria_sprite(uint16_t end_base, uint16_t dados_do_sprite[altura_sprite][larg
 
 // Exibe e move um sprite armazenado na memoria de sprites pela tela
 void move_sprite() {
-    int fd = abre_mouse();
-    if (fd == -1) {
-        perror("Erro ao ler o evento");
-    }
-    le_mouse(fd);
-
     #define INICIO_Y 358410
     #define LIMITE_Y 358850
-    
+    int x = 0, y = 0;
 
     #define mascara_10bits 0b1111111111
     uint16_t pos_x = 350;
@@ -75,33 +69,41 @@ void move_sprite() {
     pos_xy_20b = (pos_x << 10 | pos_y);
     uint32_t pos_xy_20b_ant = (pos_xy_20b); //inicia com posicao anterior igual a posicao atual
 
-    int direcao_sprite = 1; // 1 descendo e -1 subindo
+    int fd = abre_mouse();
 
     while (1) {
+        int direcao = le_mouse_direcao(fd);
+        int orientacao = le_mouse_orientacao(fd);
+        //x, y = teste_leitura(fd);
+
         // apaga o sprite exibido na posicao anterior
         exibe_sprite(0, pos_xy_20b_ant, 5, 1); // sp = 0 -> desabilita sprite
-        pos_xy_20b_ant = pos_xy_20b;
-    
-        // exibe o sprite na posicao atual
+
+        if(direcao == 0) { //horizontal
+            // if(orientacao > 0){ //direita
+            //     pos_x += 10;
+            //     pos_x &= mascara_10bits;
+            //     pos_xy_20b = (pos_x << 10 | pos_y);
+            // } else if (orientacao < 0) { //esquerda
+            //     pos_x -= 10;
+            //     pos_x &= mascara_10bits;
+            //     pos_xy_20b = (pos_x << 10 | pos_y);
+            // }
+
+        } else if (direcao == 1 ) { //vertical
+            if(orientacao > 0 && pos_xy_20b < LIMITE_Y){ //baixo
+                pos_xy_20b += 10;
+            } else if (orientacao < 0 && pos_xy_20b > INICIO_Y) { //cima
+                pos_xy_20b -= 10;
+            }
+        }
+
+         // exibe o sprite na posicao atual
         exibe_sprite(1, pos_xy_20b, 5, 1); // sp = 1 -> habilita sprite
+        pos_xy_20b_ant = pos_xy_20b;
 
-        // verifica os limites da tela para ajustar a direcao (tela 640 x 480)
-        if (direcao_sprite == 1 && (pos_xy_20b < 358850) ){
-            pos_xy_20b+= 10;//posicao atual + 10
-            if(pos_xy_20b == 358850){ // LIMITE Y FINAL
-                direcao_sprite = -1;
-            }
-        }
-
-        else if (direcao_sprite == -1 && (pos_xy_20b > 358410) ){
-            pos_xy_20b-=10;//posicao atual - 10
-            if(pos_xy_20b == 358410){
-                direcao_sprite = 1;
-            }
-        }
         usleep(10000);
     }
-    close(fd);
 }
 
 int main() {    
