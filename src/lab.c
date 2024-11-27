@@ -2,8 +2,9 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define LARGURA  11 // Largura do labirinto (deve ser ímpar)
-#define ALTURA 7 // Altura do labirinto (deve ser ímpar)
+#define LARGURA 91 // Largura do labirinto (deve ser ímpar)
+#define ALTURA 27  // Altura do labirinto (deve ser ímpar)
+#define ESPESSURA 3 // Espessura das paredes e caminhos
 
 char labirinto[ALTURA][LARGURA];
 
@@ -11,7 +12,6 @@ void inicializaLabirinto();
 void imprimeLabirinto();
 int validaPosicao(int x, int y);
 void geraLabirinto(int x, int y);
-
 
 // Função para inicializar o labirinto com paredes
 void inicializaLabirinto() {
@@ -38,21 +38,19 @@ int dy[] = {-1, 1, 0, 0};
 
 // Função para verificar se a posição é válida e se pode ser cavada
 int validaPosicao(int x, int y) {
-    if (x <= 0 || y <= 0 || x >= ALTURA - 1 || y >= LARGURA - 1) {
+    if (x < ESPESSURA || y < ESPESSURA || x >= ALTURA - ESPESSURA || y >= LARGURA - ESPESSURA) {
         return 0; // Fora dos limites
     }
-    int paredes = 0;
-    for (int i = 0; i < 4; i++) {
-        int nx = x + dx[i];
-        int ny = y + dy[i];
-        if (labirinto[nx][ny] == '#') paredes++;
-    }
-    return paredes >= 3; // Cavar apenas se a maioria ao redor for parede
+    return labirinto[x][y] == '#'; // Cavar apenas se a posição for parede
 }
 
 // Função recursiva para gerar o labirinto
 void geraLabirinto(int x, int y) {
-    labirinto[x][y] = ' '; // Marca como espaço
+    for (int i = 0; i < ESPESSURA; i++) {
+        for (int j = 0; j < ESPESSURA; j++) {
+            labirinto[x + i][y + j] = ' '; // Marca como espaço
+        }
+    }
 
     // Embaralhar as direções
     int direcoes[] = {0, 1, 2, 3};
@@ -65,11 +63,15 @@ void geraLabirinto(int x, int y) {
 
     // Tentar cada direção
     for (int i = 0; i < 4; i++) {
-        int nx = x + dx[direcoes[i]] * 2;
-        int ny = y + dy[direcoes[i]] * 2;
+        int nx = x + dx[direcoes[i]] * ESPESSURA * 2;
+        int ny = y + dy[direcoes[i]] * ESPESSURA * 2;
 
         if (validaPosicao(nx, ny)) {
-            labirinto[x + dx[direcoes[i]]][y + dy[direcoes[i]]] = ' '; // Remove parede intermediária
+            for (int j = 1; j < ESPESSURA * 2; j++) {
+                for (int k = 0; k < ESPESSURA; k++) {
+                    labirinto[x + dx[direcoes[i]] * j + k][y + dy[direcoes[i]] * j + k] = ' '; // Remove parede intermediária
+                }
+            }
             geraLabirinto(nx, ny);
         }
     }
@@ -80,12 +82,17 @@ int main() {
 
     inicializaLabirinto();
 
-    geraLabirinto(1, 1);
+    geraLabirinto(ESPESSURA, ESPESSURA);
+
+    for (int i = 0; i < ESPESSURA; i++) {
+        labirinto[ESPESSURA][i] = ' ';
+        labirinto[ALTURA - ESPESSURA - 1][LARGURA - i - 1] = ' ';
+    }
 
     // Posiciona o p1 e p2
-    labirinto[1][0] = '1';
-    labirinto[ALTURA - 2][LARGURA - 1] = '2';
-
+    labirinto[ESPESSURA][0] = '1';
+    labirinto[ALTURA - ESPESSURA - 1][LARGURA - ESPESSURA + 2] = '2';
+    
     imprimeLabirinto();
 
     return 0;
