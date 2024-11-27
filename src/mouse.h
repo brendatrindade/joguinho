@@ -7,9 +7,11 @@ Retorno: O caminho do driver do mouse. Caso ocorra algum erro, retorna -1.
 */
 int abre_mouse();
 
-void le_mouse(int fd);
+int le_mouse_orientacao(int fd);
 
-void le_mouse1(int fd);
+int le_mouse_direcao(int fd);
+
+int teste_leitura(int fd);
 
 /*
 Primeiro teste feito no LEDS.
