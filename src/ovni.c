@@ -4,6 +4,11 @@
 #include <stdlib.h>
 #include <time.h>
 
+extern void inicializa_fpga();
+extern void fecha_dev_mem();
+extern void exibe_sprite(uint8_t sp, uint16_t x, uint16_t offset, uint8_t registrador);
+extern void altera_pixel_sprite(uint16_t cor, uint16_t endereco);
+
 #define largura_sprite 20
 #define altura_sprite 20
 
@@ -202,11 +207,9 @@ void move_sprite_acel() {
     int direcao_sprite;
     int velocidade = 1;
 
-    int i = 0;
-
     gera_sprite_ovni();
 
-    while (i != -1) {
+    while (1) {
         pos_y = (pos_xy_20b & mascara_10bits);
         pos_x = ((pos_xy_20b >> 10) & mascara_10bits);
 
@@ -222,7 +225,7 @@ void move_sprite_acel() {
         //descendo
         if ( direcao_sprite == 2 ){
             if (pos_y < limite_inferior_eixoY) {
-                pos_y += (10*velocidade);//posicao atual + 10 * (1,2 ou 3)
+                pos_y += (5*velocidade);//posicao atual + 10 * (1,2 ou 3)
             } else {
                 pos_y == limite_inferior_eixoY; //fica no limite da tela
             }
@@ -230,7 +233,7 @@ void move_sprite_acel() {
         //subindo
         else if ( direcao_sprite == 8 ){
             if (pos_y > limite_superior_eixoY) {
-                pos_y -= (10*velocidade);//posicao atual + 10 * (1,2 ou 3)
+                pos_y -= (5*velocidade);//posicao atual + 10 * (1,2 ou 3)
             } else {
                 pos_y == limite_superior_eixoY; //fica no limite da tela
             }
@@ -238,7 +241,7 @@ void move_sprite_acel() {
         //direita
         else if ( direcao_sprite == 6 ){
             if (pos_x < limite_direito_eixoX) {
-                pos_x += (10*velocidade);//posicao atual + 10 * (1,2 ou 3)
+                pos_x += (5*velocidade);//posicao atual + 10 * (1,2 ou 3)
             } else {
                 pos_x == limite_direito_eixoX; //fica no limite da tela
             }
@@ -246,17 +249,25 @@ void move_sprite_acel() {
         //esquerda
         else if ( direcao_sprite == 4 ){
             if (pos_x > limite_esquerdo_eixoX) {
-                pos_x -= (10*velocidade);//posicao atual + 10 * (1,2 ou 3)
+                pos_x -= (5*velocidade);//posicao atual + 10 * (1,2 ou 3)
             } else {
                 pos_x == limite_direito_eixoX; //fica no limite da tela
             }
         }
 
         pos_xy_20b = (pos_x << 10 | pos_y);
-
         usleep(10000);
-        i++;
     }
+}
+
+int main(){
+    inicializa_fpga();
+
+    move_sprite_acel();
+
+    fecha_dev_mem();   
+
+   return 0;
 }
 
 /*
