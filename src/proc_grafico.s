@@ -60,6 +60,9 @@ sp_sucesso: .asciz "Wrreg em 0\n"
 .global altera_cor_bg
 .type altera_cor_bg, %function
 
+.global apaga_cor_bg
+.type apaga_cor_bg, %function
+
 
 @ inicializa_fpga: responsável por abrir a devman e configurar o mmap
 @ sem parâmetros
@@ -348,8 +351,6 @@ desenha_poligono:
 @_________________________________________________________________________________________________________________________________________________________________________
 
 @ altera_cor_bg: usa a instrução WBR da GPU para alterar a cor do backgraund
-@ parâmetros:
-@
 
 altera_cor_bg:
   @ Salvando contexto
@@ -371,6 +372,48 @@ altera_cor_bg:
 
   @ Escreve o valor de cor no barramento dataB
   str r0, [r11, #dataB] 
+
+  @ colocando 1 no wrreg
+  mov r5, #1
+  mov r8, #wrreg
+  str r5, [r11, r8] @ coloca o start (wrreg) em positivo pra executar os barramentos
+
+  bl _sucesso
+
+  @ colocando 0 no wrreg
+  mov r5, #0
+  mov r8, #wrreg
+  str r5, [r11, r8] @ Calcula o endereço (0xc0 hexadecimal) ao endereço base armazenado em r11, e coloca o valor logico baixo ao start (werreg)
+
+  @ Restaurando contexto
+  pop {r0-r11, pc}
+  bx lr
+
+@_________________________________________________________________________________________________________________________________________________________________________
+
+@ apaga_cor_bg: usa a instrução WBR da GPU para apagar a cor do backgraund
+
+apaga_cor_bg:
+  @ Salvando contexto
+  push {r0-r11, lr}
+
+  ldr r11, =end_base @ r11 = endereço base
+  ldr r11, [r11]
+
+  @ colocando 0 no wrreg
+  mov r5, #0
+  mov r8, #wrreg
+  str r5, [r11, r8] @ Calcula o endereço (0xc0 hexadecimal) ao endereço base armazenado em r11, e coloca o valor logico baixo ao start (werreg)
+
+  @ Escreve no barramento dataA
+  lsl r0, r0, #4
+  mov r3, #0b0000 @ r3 = opcode de WBR
+  add r0, r0, r3
+  str r0, [r11, #dataA] 
+
+  @ Escreve o valor de cor no barramento dataB
+  mov r1, #000
+  str r1, [r11, #dataB] 
 
   @ colocando 1 no wrreg
   mov r5, #1

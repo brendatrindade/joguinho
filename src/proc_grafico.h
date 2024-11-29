@@ -28,4 +28,7 @@ void desenha_poligono(uint16_t cor, uint16_t tamanho, uint16_t forma, uint16_t e
 
 void altera_cor_bg(uint16_t cor, uint8_t registrador);
 
+void apaga_cor_bg(uint8_t registrador);
+
+
 #endif /* PROC_GRAFICO_H */
