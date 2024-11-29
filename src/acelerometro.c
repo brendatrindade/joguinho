@@ -39,10 +39,10 @@
 #define ADXL345_BW_RATE 0x2C
 
 #define AMOSTRAS_CALIBRACAO 100
-#define FILTRO_MOVIMENTO 0.20
+#define FILTRO_MOVIMENTO 30
 
 volatile uint32_t *base_hps; //ponteiro para a memoria HPS mapeada
-int mg_por_lsb = 4; //mg por bit menos significativo para conversão
+int mg_por_lsb = 2; //mg por bit menos significativo para conversão
 int16_t offset_x, offset_y, offset_z = 0; //offset dos eixos X, Y e Z para calibracao
 int fd;
 
@@ -134,6 +134,15 @@ void ler_aceleracao_z(int16_t *z) {
    ler_i2c(ADXL345_INT_SOURCE); //limpa interrupcoes detectadas
 }
 
+
+void ler_aceleracao_xy(int16_t *x, int16_t *y){
+   int16_t x_temp, y_temp;
+   while(!dados_prontos()); //aguarda novos dados
+   *x = (ler_i2c(ADXL345_DATAX1) << 8) | ler_i2c(ADXL345_DATAX0); //le e combina em 16bits os dados MSB e LSB do eixo x
+   *y = (ler_i2c(ADXL345_DATAY1) << 8) | ler_i2c(ADXL345_DATAY0); //le e combina em 16bits os dados MSB e LSB do eixo y
+   ler_i2c(ADXL345_INT_SOURCE); //limpa interrupcoes detectadas
+}
+
 int dados_prontos() {
    return (ler_i2c(ADXL345_INT_SOURCE) & 0x80) != 0; //0b10000000 - verifica o bit 7 data_ready
 }
@@ -207,9 +216,9 @@ int desmapear_memoria(){
 
 // Define a velocidade com base na aceleração
 int define_velocidade(float valor_g) {
-   if (valor_g < (5 * FILTRO_MOVIMENTO)) {
+   if (valor_g < ( FILTRO_MOVIMENTO / 3)) {
       return 1; //velocidade baixa
-   } else if (valor_g < (10 * FILTRO_MOVIMENTO)) {
+   } else if (valor_g < ( FILTRO_MOVIMENTO / 2 )) {
       return 2; //velocidade media
    } else {
       return 3; //velocidade alta
@@ -218,34 +227,52 @@ int define_velocidade(float valor_g) {
 
 //8 cima, 2 baixo, 6 direita, 4 esquerda, 0 sem movimento
 int get_movimento(int *velocidade){
+   inicializar_i2c();
+   inicializar_acelerometro();
+
    int16_t x_bruto, y_bruto;
    float x_g, y_g;
 
-   ler_aceleracao_x(&x_bruto);
-   ler_aceleracao_y(&y_bruto);
+   usleep(10000);
+   ler_aceleracao_xy(&x_bruto, &y_bruto);
 
-   x_g = (x_bruto - offset_x) * (mg_por_lsb / 1000.0);
-   y_g = (y_bruto - offset_y) * (mg_por_lsb / 1000.0);
+   float fator;
+   fator = (mg_por_lsb / 1000.0);
+   int valor_x, valor_y;
+   valor_x = (x_bruto - offset_x);
+   valor_y = (y_bruto - offset_y);
 
-   if (x_g > FILTRO_MOVIMENTO || y_g > FILTRO_MOVIMENTO ){
-      if (x_g > y_g) { //movimento no eixo x+
-         *velocidade = define_velocidade(x_g);
-         return 6; // x - direcao para direita
-      } else if (y_g > x_g){ //movimento no eixo y+
-         *velocidade = define_velocidade(y_g);
-         return 8; // y - direcao para cima
-      }
-   } else if (x_g < -FILTRO_MOVIMENTO || y_g < -FILTRO_MOVIMENTO ){
-      if ( x_g < y_g ){ //movimento no eixo x-
-         *velocidade = define_velocidade(-x_g);
-         return 4; // x - direcao para esquerda
-      } else if (y_g < x_g){ //movimento no eixo y-
-         *velocidade = define_velocidade(y_g);
-         return 2; //y - direcao para baixo
-      }
+   x_g = valor_x * fator;
+   y_g = valor_y * fator;
+
+   printf("\nX: %d Y: %d\n", x_bruto, y_bruto);
+
+   printf("\nEm g: \nX: %.2f Y: %.2f\n", x_g, y_g); 
+
+   if ( (x_bruto > FILTRO_MOVIMENTO) && (x_bruto > y_bruto)) { //movimento no eixo x+
+      printf("movimento x+\n");
+      *velocidade = define_velocidade(x_bruto);
+      return 6; // x - direcao para direita
+   } else if ( (y_bruto > FILTRO_MOVIMENTO) && (y_bruto > x_bruto) ) { //movimento no eixo y+
+      printf("movimento y+\n");
+      *velocidade = define_velocidade(y_bruto);
+      return 8; // y - direcao para cima
+   
+   } else if ( (x_bruto < -FILTRO_MOVIMENTO) && (x_bruto < y_bruto)) { //movimento no eixo x-
+      printf("movimento x-\n");
+      *velocidade = define_velocidade(-x_bruto);
+      return 4; // x - direcao para esquerda
+
+   } else if ( (y_bruto < -FILTRO_MOVIMENTO) && (y_bruto < x_bruto)) { //movimento no eixo y-
+      printf("movimento y-\n");
+      *velocidade = define_velocidade(-y_bruto);
+      return 2; //y - direcao para baixo
    }
+
+   printf("sem movimento\n");
    return 0; //sem movimento   
 }
+
 
 int get_direcao_movimento_x(int *velocidade){
    int16_t x_bruto;

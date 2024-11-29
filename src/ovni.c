@@ -6,7 +6,7 @@
 
 extern void inicializa_fpga();
 extern void fecha_dev_mem();
-extern void exibe_sprite(uint8_t sp, uint16_t x, uint16_t offset, uint8_t registrador);
+extern void exibe_sprite(uint8_t sp, uint32_t xy, uint16_t offset, uint8_t registrador);
 extern void altera_pixel_sprite(uint16_t cor, uint16_t endereco);
 
 #define largura_sprite 20

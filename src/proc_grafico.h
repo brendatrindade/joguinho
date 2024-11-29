@@ -20,7 +20,7 @@ void apaga_bloco(uint16_t posicao);
 
 void fecha_dev_mem();
 
-void exibe_sprite(uint8_t sp, uint16_t x, uint16_t offset, uint8_t registrador);
+void exibe_sprite(uint8_t sp, uint32_t xy, uint16_t offset, uint8_t registrador);
 
 void altera_pixel_sprite(uint16_t cor, uint16_t endereco);
 
