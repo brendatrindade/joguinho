@@ -43,7 +43,7 @@
 
 volatile uint32_t *base_hps; //ponteiro para a memoria HPS mapeada
 int mg_por_lsb = 2; //mg por bit menos significativo para conversão
-int16_t offset_x, offset_y, offset_z = 0; //offset dos eixos X, Y e Z para calibracao
+int16_t offset_x, offset_y, offset_z; //offset dos eixos X, Y e Z para calibracao
 int fd;
 
 void escrever_registrador(uint32_t endereco, uint32_t valor) {
@@ -134,9 +134,7 @@ void ler_aceleracao_z(int16_t *z) {
    ler_i2c(ADXL345_INT_SOURCE); //limpa interrupcoes detectadas
 }
 
-
 void ler_aceleracao_xy(int16_t *x, int16_t *y){
-   int16_t x_temp, y_temp;
    while(!dados_prontos()); //aguarda novos dados
    *x = (ler_i2c(ADXL345_DATAX1) << 8) | ler_i2c(ADXL345_DATAX0); //le e combina em 16bits os dados MSB e LSB do eixo x
    *y = (ler_i2c(ADXL345_DATAY1) << 8) | ler_i2c(ADXL345_DATAY0); //le e combina em 16bits os dados MSB e LSB do eixo y
@@ -148,26 +146,27 @@ int dados_prontos() {
 }
 
 void calibrar_acelerometro(int16_t *offset_x, int16_t *offset_y, int16_t *offset_z) {
-    int32_t soma_x, soma_y, soma_z = 0;
-    int16_t x, y, z;
-    int i;
- 
-    for (i = 0; i < AMOSTRAS_CALIBRACAO; i++) {
-        ler_aceleracao_x(&x);
-        ler_aceleracao_y(&y);
-        ler_aceleracao_z(&z);
-        soma_x += x;
-        soma_y += y;
-        soma_z += z;
-    }
+   int32_t soma_x = 0;
+   int32_t soma_y = 0;
+   int32_t soma_z = 0;
+   int16_t x, y, z;
+   int i;
 
-    *offset_x = soma_x / AMOSTRAS_CALIBRACAO; //calcula a media de leituras obtidas por x
-    *offset_y = soma_y / AMOSTRAS_CALIBRACAO; //calcula a media de leituras obtidas por y
-    *offset_z = soma_z / AMOSTRAS_CALIBRACAO; //calcula a media de leituras obtidas por z
+   for (i = 0; i < AMOSTRAS_CALIBRACAO; i++) {
+      ler_aceleracao_x(&x);
+      ler_aceleracao_y(&y);
+      ler_aceleracao_z(&z);
+      soma_x += x;
+      soma_y += y;
+      soma_z += z;
+   }
 
-    printf("Calibracao completa \n Offset: X=%d \n Offset: Y=%d \n Offset: Z=%d \n", *offset_x, *offset_y, *offset_z);
+   *offset_x = soma_x / AMOSTRAS_CALIBRACAO; //calcula a media de leituras obtidas por x
+   *offset_y = soma_y / AMOSTRAS_CALIBRACAO; //calcula a media de leituras obtidas por y
+   *offset_z = soma_z / AMOSTRAS_CALIBRACAO; //calcula a media de leituras obtidas por z
+
+   printf("Calibracao completa \n Offset: X=%d \n Offset: Y=%d \n Offset: Z=%d \n", *offset_x, *offset_y, *offset_z);
 }
-
 
 int configurar_acelerometro(){
    uint8_t devid;
@@ -209,9 +208,9 @@ int configurar_acelerometro(){
 }
 
 int desmapear_memoria(){
-    munmap((void*)base_hps, HPS_SPAN);
-    close(fd);
-    return 0;
+   munmap((void*)base_hps, HPS_SPAN);
+   close(fd);
+   return 0;
 }
 
 // Define a velocidade com base na aceleração
@@ -237,7 +236,8 @@ int get_movimento(int *velocidade){
    ler_aceleracao_xy(&x_bruto, &y_bruto);
 
    float fator;
-   fator = (mg_por_lsb / 1000.0);
+   fator = (mg_por_lsb / 1000);
+
    int valor_x, valor_y;
    valor_x = (x_bruto - offset_x);
    valor_y = (y_bruto - offset_y);
@@ -245,8 +245,7 @@ int get_movimento(int *velocidade){
    x_g = valor_x * fator;
    y_g = valor_y * fator;
 
-   printf("\nX: %d Y: %d\n", x_bruto, y_bruto);
-
+   printf("\nBruto: \nX: %d Y: %d\n-------------------------\n", x_bruto, y_bruto);
    printf("\nEm g: \nX: %.2f Y: %.2f\n", x_g, y_g); 
 
    if ( (x_bruto > FILTRO_MOVIMENTO) && (x_bruto > y_bruto)) { //movimento no eixo x+
@@ -312,17 +311,17 @@ int get_direcao_movimento_y(int *velocidade){
 }
 
 int get_direcao_movimento_z(){
-    int16_t z_bruto;
-    float z_g;
+   int16_t z_bruto;
+   float z_g;
 
-    ler_aceleracao_z(&z_bruto);
+   ler_aceleracao_z(&z_bruto);
 
-    z_g = (z_bruto - offset_z) * (mg_por_lsb / 1000.0);
+   z_g = (z_bruto - offset_z) * (mg_por_lsb / 1000.0);
 
-    if (z_g > FILTRO_MOVIMENTO) {
-        return 1;  // frente
-    } else if (z_g < -FILTRO_MOVIMENTO) {
-        return -1; // tras
-    } 
+   if (z_g > FILTRO_MOVIMENTO) {
+      return 1;  // frente
+   } else if (z_g < -FILTRO_MOVIMENTO) {
+      return -1; // tras
+   } 
     return 0; // sem movimento   
 }
