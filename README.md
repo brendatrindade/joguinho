@@ -88,7 +88,7 @@ Para usar a GraphLib basicamente no seu código em C você vai chamar o header d
 Antes de usar qualquer uma das funções gráficas da biblioteca você deve chamar o inicializa_fpga e ao encerrar a função gráfica fecha_dev_men para que as funções gráficas funcionem corretamente chamando as syscall necessárias para abrir e fechar o arquivo devmam, para fazer e desfazer o mapeamento. 
 
 ### escreve_bloco e apaga_bloco
-Para usar a função escreve_bloco você precisa passar a cor e posição. Em relação as cores, elas já estam definidas no header da biblioteca e basta chamar o nome da cor, e em relação a posição é necessário fazer um calculo para passar o valor. Sabendo que em tela temos uma resolução de 80x60 blocos de tamanho 8x8, quando formos passar a posição precisamos calcular dessa maneira: (i + (j * 80)), em que i é a posição da linha e j a posição da coluna. Em relação ao apaga bloco, somente é preciso passar a posição em que quer apagar.
+Para usar a função escreve_bloco você precisa passar a cor e posição. Em relação as cores, elas já estão definidas no header da biblioteca e basta chamar o nome da cor, e em relação a posição é necessário fazer um calculo para passar o valor. Sabendo que em tela temos uma resolução de 80x60 blocos de tamanho 8x8, quando formos passar a posição precisamos calcular dessa maneira: (i + (j * 80)), em que i é a posição da linha e j a posição da coluna. Em relação ao apaga bloco, somente é preciso passar a posição em que quer apagar.
 - Parâmetros
   - uint16_t cor: cor do bloco
   - uint16_t posicao: posicao do bloco
