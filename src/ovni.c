@@ -136,52 +136,6 @@ void gera_sprite_ovni(){
     cria_sprite(1600, dados_do_sprite);
 }
 
-//Exibe e move um sprite armazenado na memoria de sprites pela tela
-void move_sprite() {
-    #define mascara_10bits 0b1111111111
-    uint16_t pos_x = 350;
-    uint16_t pos_y = 240;
-
-    pos_x &= mascara_10bits;
-    pos_y &= mascara_10bits;
-    
-    uint32_t pos_xy_20b;
-    pos_xy_20b = (pos_x << 10 | pos_y);
-    uint32_t pos_xy_20b_ant = (pos_xy_20b); //inicia com posicao anterior igual a posicao atual
-
-    int direcao_sprite = 1; //1 descendo e -1 subindo
-    int i = 0;
-
-    while (i < 1000) {
-        //apaga o sprite exibido na posicao anterior
-        exibe_sprite(0, pos_xy_20b_ant, 4, 1);//sp = 0 - desabilita sprite
-        pos_xy_20b_ant = pos_xy_20b;
-    
-        //exibe o sprite na posicao atual
-        exibe_sprite(1, pos_xy_20b, 4, 1);//sp = 1 - habilita sprite
-
-        //verifica os limites da tela para ajustar a direcao
-        //tela 640 x 480
-        if (direcao_sprite == 1 && (pos_xy_20b < 358850) ){
-            pos_xy_20b+= 10;//posicao atual + 10
-            if(pos_xy_20b == 358850){
-                //101011110 0111000010 -> x = 0101011110 = 350, y = 0111000010 = 450
-                direcao_sprite = -1;
-            }
-        }
-
-        else if (direcao_sprite == -1 && (pos_xy_20b > 358410) ){
-            pos_xy_20b-=10;//posicao atual - 10
-            if(pos_xy_20b == 358410){
-                //0101011110 0000001010 -> x = 0101011110 = 350, y = 0000001010 = 10
-                direcao_sprite = 1;
-            }
-        }
-        usleep(10000);
-        i++;
-    }
-}
-
 //Move 1 eixo por vez
 //Exibe e move um sprite armazenado na memoria de sprites pela tela controlado pelo acelerometro
 void move_sprite_acel() {
