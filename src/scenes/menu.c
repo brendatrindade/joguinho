@@ -1,7 +1,7 @@
 #include "proc_grafico.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <unistd.h>
 
 extern void inicializa_fpga();
 extern void fecha_dev_mem();

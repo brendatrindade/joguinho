@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
+#include <unistd.h>
 #include "proc_grafico.h"
 #include "mouse.h"
 #include "acelerometro.c"
