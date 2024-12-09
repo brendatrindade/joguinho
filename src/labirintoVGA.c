@@ -5,6 +5,8 @@
 #include "mouse.h"
 #include "acelerometro.c"
 #include <math.h>
+#include "ovni.c"
+#include "portal.c"
 
 extern void fecha_dev_mem();
 extern void inicializa_fpga();
@@ -241,6 +243,98 @@ void colisao() {
     }
 }
 
+
+void colisao_labirinto(*labirinto[i][j]) {
+    // tela 640 x 480 
+    // labirinto 60 x 80
+    // i -> 10,66 j -> 6
+    #define mascara_10bits 0b1111111111
+    #define limite_superior_eixoY 33  //esta para o y 5 do labirinto 
+    #define limite_inferior_eixoY 428 //esta para o y 75 do labirinto 
+    #define limite_esquerdo_eixoX 35 //esta para o x 5 do labirinto 
+    #define limite_direito_eixoX 550 //esta para o x 59 do labirinto
+
+    uint16_t pos_x = 0;
+    uint16_t pos_y = 30;
+
+    pos_x &= mascara_10bits;
+    pos_y &= mascara_10bits;
+    
+    uint32_t pos_xy_20b;
+    pos_xy_20b = (pos_x << 10 | pos_y);
+    
+    uint32_t pos_xy_20b_ant = (pos_xy_20b); //inicia com posicao anterior igual a posicao atual
+
+    int direcao_sprite;
+    int velocidade = 1;    
+
+    while (1) {
+        pos_y = (pos_xy_20b & mascara_10bits);
+        pos_x = ((pos_xy_20b >> 10) & mascara_10bits);
+
+        float divisor_i = 10.66;
+        int divisor_j = 6;
+        float i_float = pos_x / divisor_i;
+        int j = (pos_y / divisor_j) - 1;
+        int i = (round(i_float)) - 1;
+        
+        printf("x = %d; y = %d\n", i, j);
+
+        direcao_sprite = get_movimento(&velocidade); //8 cima, 2 baixo, 6 direita, 4 esquerda, 0 sem movimento
+
+        //apaga o sprite exibido na posicao anterior
+        exibe_sprite(0, pos_xy_20b_ant, 1, 1);//sp = 0 - desabilita sprite
+        pos_xy_20b_ant = pos_xy_20b;
+    
+        //exibe o sprite na posicao atual
+        exibe_sprite(1, pos_xy_20b, 1, 1);//sp = 1 - habilita sprite
+
+        //descendo
+        if ( direcao_sprite == 2 ){
+            if (*labirinto[i][j] == '#') {
+                pos_y = pos_y;
+            } else if ( (pos_y += (5*velocidade)) < limite_inferior_eixoY ) {
+                pos_y += (5*velocidade); //posicao atual + 10 * (1,2 ou 3)
+            } else {
+                pos_y == limite_inferior_eixoY; //fica no limite da tela
+            }
+        }
+        //subindo
+        else if ( direcao_sprite == 8 ){
+            if (*labirinto[i][j] == '#') {
+                pos_y = pos_y;
+            } else if ( (pos_y -= (5*velocidade)) > limite_superior_eixoY) {
+                pos_y -= (5*velocidade); //posicao atual + 10 * (1,2 ou 3)
+            } else {
+                pos_y == limite_superior_eixoY; //fica no limite da tela
+            }
+        }
+        //direita
+        else if ( direcao_sprite == 6 ){
+            if (*labirinto[i][j] == '#') {
+                pos_x = pos_x;
+            } else if ( (pos_x += (5*velocidade)) < limite_direito_eixoX) { // 
+                pos_x += (5*velocidade); //posicao atual + 10 * (1,2 ou 3)
+            } else {
+                pos_x == limite_direito_eixoX; //fica no limite da tela
+            }
+        }
+        //esquerda
+        else if ( direcao_sprite == 4 ){
+            if (*labirinto[i][j] == '#') {
+                pos_x = pos_x;
+            } else if ( (pos_x -= (5*velocidade)) > limite_esquerdo_eixoX) {                             
+                pos_x -= (5*velocidade); //posicao atual + 10 * (1,2 ou 3)
+            } else {
+                pos_x == limite_direito_eixoX; //fica no limite da tela
+            }
+        }
+
+        pos_xy_20b = (pos_x << 10 | pos_y);
+        usleep(10000);
+    }
+}
+
 int main() {
     inicializa_fpga();
     configurar_acelerometro();
@@ -280,6 +374,9 @@ int main() {
     uint32_t pos_xy_20b;
     pos_xy_20b = (pos_x << 10 | pos_y);
 
+    gera_sprite_ovni();
+    gera_sprite_portal();
+
     for(int i = 0; i < ALTURA; i++) { 
         for(int j = 0; j < LARGURA; j++) {
             if(labirinto[i][j] == '1'){
@@ -298,8 +395,7 @@ int main() {
         //apagaLabirinto();
     }
     
-    //move_sprite();
-    //colisao();
+    colisao_labirinto(&labirinto);
 
     desmapear_memoria();
     fecha_dev_mem();
