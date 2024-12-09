@@ -2,7 +2,7 @@
 #include <fcntl.h>
 #include <linux/input.h>
 #include <unistd.h>
-
+#include <stdint.h>
 
 int abre_mouse();
 void le_mouse(int fd);
@@ -41,10 +41,9 @@ int le_mouse_orientacao(int fd) {
     }
 }
 
-// muito sensivel
-int le_mouse_direcao(int fd) {
+int le_mouse_direcao(int fd, uint16_t *x, uint16_t *y) {
     struct input_event ie;
-    int x = 0, y = 0;
+    //int x = 0, y = 0;
     
     while (1) {
         if (read(fd, &ie, sizeof(ie)) != sizeof(ie)) {
@@ -53,11 +52,21 @@ int le_mouse_direcao(int fd) {
         }
 
         if (ie.type == EV_REL) {
-            if (ie.code == REL_X) { 
-                printf("\nMovimento horizontal");
+            if (ie.code == REL_X) {
+                if (ie.value > 0)  {
+                    *x+=10;
+                } else {
+                    *x-=10;
+                }
+                *y=*y;
                 return 0;
             } else if (ie.code == REL_Y) {
-                printf("\nMovimento vertical");
+                if (ie.value > 0)  {
+                    *y+=10;
+                } else {
+                    *y-=10;
+                }
+                *x=*x;
                 return 1;
             }
         }
