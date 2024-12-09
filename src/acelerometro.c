@@ -215,11 +215,14 @@ int desmapear_memoria(){
 
 // Define a velocidade com base na aceleração
 int define_velocidade(float valor_g) {
-   if (valor_g < ( FILTRO_MOVIMENTO / 3)) {
+   if (valor_g < ( FILTRO_MOVIMENTO * 3)) {
+      //printf("velocidade 1");
       return 1; //velocidade baixa
-   } else if (valor_g < ( FILTRO_MOVIMENTO / 2 )) {
+   } else if (valor_g < ( FILTRO_MOVIMENTO * 4)) {
+      //printf("velocidade 2");
       return 2; //velocidade media
    } else {
+      //printf("velocidade 3");
       return 3; //velocidade alta
    }
 }
@@ -245,30 +248,31 @@ int get_movimento(int *velocidade){
    x_g = valor_x * fator;
    y_g = valor_y * fator;
 
-   printf("\nBruto: \nX: %d Y: %d\n-------------------------\n", x_bruto, y_bruto);
-   printf("\nEm g: \nX: %.2f Y: %.2f\n", x_g, y_g); 
+   //printf("\nBruto: \nX: %d Y: %d\n-------------------------\n", x_bruto, y_bruto);
+
+   //printf("\nEm g: \nX: %.2f Y: %.2f\n", x_g, y_g); 
 
    if ( (x_bruto > FILTRO_MOVIMENTO) && (x_bruto > y_bruto)) { //movimento no eixo x+
-      printf("movimento x+\n");
+      //printf("movimento x+\n");
       *velocidade = define_velocidade(x_bruto);
       return 6; // x - direcao para direita
    } else if ( (y_bruto > FILTRO_MOVIMENTO) && (y_bruto > x_bruto) ) { //movimento no eixo y+
-      printf("movimento y+\n");
+      //printf("movimento y+\n");
       *velocidade = define_velocidade(y_bruto);
       return 8; // y - direcao para cima
    
    } else if ( (x_bruto < -FILTRO_MOVIMENTO) && (x_bruto < y_bruto)) { //movimento no eixo x-
-      printf("movimento x-\n");
+      //printf("movimento x-\n");
       *velocidade = define_velocidade(-x_bruto);
       return 4; // x - direcao para esquerda
 
    } else if ( (y_bruto < -FILTRO_MOVIMENTO) && (y_bruto < x_bruto)) { //movimento no eixo y-
-      printf("movimento y-\n");
+      //printf("movimento y-\n");
       *velocidade = define_velocidade(-y_bruto);
       return 2; //y - direcao para baixo
    }
 
-   printf("sem movimento\n");
+   //printf("sem movimento\n");
    return 0; //sem movimento   
 }
 
