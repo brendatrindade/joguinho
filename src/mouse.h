@@ -1,5 +1,6 @@
 #ifndef MOUSE_H
 #define MOUSE_H
+#include <stdint.h>
 
 /*
 Abre o driver do mouse em modo leitura.
@@ -9,7 +10,7 @@ int abre_mouse();
 
 int le_mouse_orientacao(int fd);
 
-int le_mouse_direcao(int fd);
+int le_mouse_direcao(int fd, uint16_t *x, uint16_t *y);
 
 int teste_leitura(int fd);
 
