@@ -6,7 +6,7 @@
 
 extern void inicializa_fpga();
 extern void fecha_dev_mem();
-extern void exibe_sprite(uint8_t sp, uint16_t x, uint16_t offset, uint8_t registrador);
+extern void exibe_sprite(uint8_t sp, uint32_t x, uint16_t offset, uint8_t registrador);
 extern void altera_pixel_sprite(uint16_t cor, uint16_t endereco);
 
 
@@ -72,32 +72,17 @@ void move_sprite() {
     int fd = abre_mouse();
 
     while (1) {
-        int direcao = le_mouse_direcao(fd);
+        int direcao = le_mouse_direcao(fd, &pos_x, &pos_y);
         int orientacao = le_mouse_orientacao(fd);
-        //x, y = teste_leitura(fd);
 
         // apaga o sprite exibido na posicao anterior
         exibe_sprite(0, pos_xy_20b_ant, 5, 1); // sp = 0 -> desabilita sprite
 
-        if(direcao == 0) { //horizontal
-            // if(orientacao > 0){ //direita
-            //     pos_x += 10;
-            //     pos_x &= mascara_10bits;
-            //     pos_xy_20b = (pos_x << 10 | pos_y);
-            // } else if (orientacao < 0) { //esquerda
-            //     pos_x -= 10;
-            //     pos_x &= mascara_10bits;
-            //     pos_xy_20b = (pos_x << 10 | pos_y);
-            // }
-
-        } else if (direcao == 1 ) { //vertical
-            if(orientacao > 0 && pos_xy_20b < LIMITE_Y){ //baixo
-                pos_xy_20b += 10;
-            } else if (orientacao < 0 && pos_xy_20b > INICIO_Y) { //cima
-                pos_xy_20b -= 10;
-            }
-        }
-
+       
+        pos_x &= mascara_10bits;
+        pos_y &= mascara_10bits;
+        pos_xy_20b = (pos_x << 10 | pos_y);
+        
          // exibe o sprite na posicao atual
         exibe_sprite(1, pos_xy_20b, 5, 1); // sp = 1 -> habilita sprite
         pos_xy_20b_ant = pos_xy_20b;

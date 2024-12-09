@@ -3,6 +3,8 @@ all:
 #	gcc main.c -o exe
 #	gcc mouse.c -o exe
 #	gcc meta.c proc_grafico.s mouse.c -o exe
-#	gcc ovni.c proc_grafico.s mouse.c -o exe
-#	gcc lab.c -o exe -std=c99
+#	gcc ovni.c proc_grafico.s -o exe
+#	gcc menu.c proc_grafico.s -o exe
+#	gcc lab_v2.c -o exe -std=c99
+	gcc labirintoVGA.c proc_grafico.s mouse.c -o exe -std=c99
 	sudo ./exe
