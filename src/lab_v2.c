@@ -3,13 +3,13 @@
 #include <time.h>
 #include "proc_grafico.h"
 
-extern void escreve_bloco(uint16_t posicao, uint16_t cor);
-
 #define LARGURA 91 // Largura do labirinto (deve ser ímpar)
 #define ALTURA 27  // Altura do labirinto (deve ser ímpar)
 #define ESPESSURA 3 // Espessura das paredes e caminhos
 
 char labirinto[ALTURA][LARGURA];
+
+extern void escreve_bloco(uint16_t posicao, uint16_t cor);
 
 void inicializaLabirinto();
 void imprimeLabirinto();
@@ -108,4 +108,4 @@ int main() {
     imprime();
 
     return 0;
-},
+}
