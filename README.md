@@ -1,5 +1,5 @@
 <div align="center">  
-  <h4 align="center">Capa do Joguinho</h4>
+  <h4 align="center">Capa Lost in Space</h4>
 </div>
 
 <h4 align="center">Projeto da disciplina TEC 499 - Sistemas Digitais - TP04 | Grupo 02</h4>
