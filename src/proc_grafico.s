@@ -84,7 +84,6 @@ inicializa_fpga:
   @ verifica se o arquivo foi aberto corretamente, pois o retorno indica se deu erro ou não
   cmp r0, #0  @ compara o valor com 0
   blt _erro   @ se r0 < 0 deu erro e vai para mensagem de erro
-  bl _sucesso @ se não vai para mensagem de sucesso
 
   @ Configura o mmap
   ldr r5, =ponteFPGA   @carrega o endereço base da FPGA, mas não carrega necessariamente o valor real associado a esse endereço
@@ -145,8 +144,6 @@ escreve_bloco:
   mov r8, #wrreg
   str r5, [r11, r8] @ coloca o start (wrreg) em positivo pra executar os barramentos
 
-  bl _sucesso @ se não vai para mensagem de sucesso
-
   @ colocando 0 no wrreg
   mov r5, #0
   mov r8, #wrreg
@@ -193,8 +190,6 @@ apaga_bloco:
   mov r5, #1
   mov r8, #wrreg
   str r5, [r11, r8] @ coloca o start (wrreg) em positivo pra executar os barramentos
-
-  bl _sucesso @mensagem de sucesso
 
   @ colocando 0 no wrreg
   mov r5, #0
@@ -248,8 +243,6 @@ exibe_sprite:
   mov r8, #wrreg
   str r5, [r9, r8] @ espera (wrreg)
 
-  @bl _sp_sucesso
-
   pop {r0-r10, pc}
   bx lr
 
@@ -295,8 +288,6 @@ altera_pixel_sprite:
   mov r6, #wrreg
   str r5, [r3, r6] @ espera (wrreg)
 
-  @bl _sp_sucesso
-
   pop {r0-r7, pc}
   bx lr
 
@@ -338,8 +329,6 @@ desenha_poligono:
   mov r8, #wrreg
   str r5, [r11, r8] @ coloca o start (wrreg) em positivo pra executar os barramentos
 
-  bl _sucesso @vai para mensagem de sucesso
-
   @ colocando 0 no wrreg
   mov r5, #0
   mov r8, #wrreg
@@ -377,8 +366,6 @@ altera_cor_bg:
   mov r5, #1
   mov r8, #wrreg
   str r5, [r11, r8] @ coloca o start (wrreg) em positivo pra executar os barramentos
-
-  bl _sucesso
 
   @ colocando 0 no wrreg
   mov r5, #0
@@ -420,7 +407,6 @@ apaga_cor_bg:
   mov r8, #wrreg
   str r5, [r11, r8] @ coloca o start (wrreg) em positivo pra executar os barramentos
 
-  bl _sucesso
 
   @ colocando 0 no wrreg
   mov r5, #0

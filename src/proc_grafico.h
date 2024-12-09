@@ -11,6 +11,8 @@
 #define CIANO   504
 #define BRANCO  511
 #define APAGA  510
+#define AZUL_ESCURO 128
+#define ROXO_ESCURO 130
 
 void inicializa_fpga();
 
