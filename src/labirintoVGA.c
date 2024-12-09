@@ -374,7 +374,9 @@ int main() {
     uint32_t pos_xy_20b;
     pos_xy_20b = (pos_x << 10 | pos_y);
 
-    gera_sprite_ovni();
+    gera_sprite_ovni_ofst1();
+    gera_sprite_ovni_ofst2();
+    gera_sprite_ovni_ofst3();
     gera_sprite_portal();
 
     for(int i = 0; i < ALTURA; i++) { 
@@ -383,7 +385,7 @@ int main() {
                 exibe_sprite(1, pos_xy_20b, 1, 1);
             }
             else if(labirinto[i][j] == '2'){
-                exibe_sprite(1, pos_xy_20b, 5, 2);
+                exibe_sprite(1, pos_xy_20b, 2, 2);
             }
         }
     }
