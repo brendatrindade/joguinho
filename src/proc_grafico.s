@@ -63,6 +63,9 @@ sp_sucesso: .asciz "Wrreg em 0\n"
 .global apaga_cor_bg
 .type apaga_cor_bg, %function
 
+.global acess_btn
+.type acess_btn, %function
+
 
 @ inicializa_fpga: responsável por abrir a devman e configurar o mmap
 @ sem parâmetros
@@ -419,7 +422,20 @@ apaga_cor_bg:
 
 @_________________________________________________________________________________________________________________________________________________________________________
 
+@ acess_btn: função para ler os o boões
+
+acess_btn:    @função que acessa os botões
+
+    ldr r11, =mapped_address    @ Endereço base mapeado
+    ldr r11, [r11]
+
+    ldr r0, [r11, #0x0]  @endereço base botões
+    bx lr
+
+@_________________________________________________________________________________________________________________________________________________________________________
+
 @fecha_dev_mem: essa função é responsável por encerrar o arquivo devman 
+
 fecha_dev_mem:
   push {r7, lr}
   mov r7, #munmap
