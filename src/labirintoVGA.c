@@ -275,9 +275,9 @@ void colisao_labirinto(*labirinto[i][j]) {
         float divisor_i = 10.66;
         int divisor_j = 6;
         float i_float = pos_x / divisor_i;
+
         int j = (pos_y / divisor_j) - 1;
         int i = (round(i_float)) - 1;
-        
         printf("x = %d; y = %d\n", i, j);
 
         direcao_sprite = get_movimento(&velocidade); //8 cima, 2 baixo, 6 direita, 4 esquerda, 0 sem movimento
@@ -289,47 +289,56 @@ void colisao_labirinto(*labirinto[i][j]) {
         //exibe o sprite na posicao atual
         exibe_sprite(1, pos_xy_20b, 1, 1);//sp = 1 - habilita sprite
 
+        int movimento = 5*velocidade;
+
         //descendo
         if ( direcao_sprite == 2 ){
-            if (*labirinto[i][j] == '#') {
-                pos_y = pos_y;
-            } else if ( (pos_y += (5*velocidade)) < limite_inferior_eixoY ) {
-                pos_y += (5*velocidade); //posicao atual + 10 * (1,2 ou 3)
+            if (*labirinto[i][j+movimento] != '#') {
+                pos_y += movimento; //sem parede, pode mover
+            } else if ((*labirinto[i][j+movimento] == '#')){
+                pos_y = pos_y; //parede, fica onde esta
+            } else if ( (pos_y += movimento) < limite_inferior_eixoY ) {
+                pos_y += movimento; //posicao atual + 5 * (1,2 ou 3)
             } else {
                 pos_y == limite_inferior_eixoY; //fica no limite da tela
             }
         }
         //subindo
         else if ( direcao_sprite == 8 ){
-            if (*labirinto[i][j] == '#') {
-                pos_y = pos_y;
-            } else if ( (pos_y -= (5*velocidade)) > limite_superior_eixoY) {
-                pos_y -= (5*velocidade); //posicao atual + 10 * (1,2 ou 3)
+            if (*labirinto[i][j-movimento] != '#') {
+                pos_y -= movimento; //sem parede, pode mover
+            } else if ((*labirinto[i][j-movimento] == '#')){
+                pos_y = pos_y; //parede, fica onde esta
+            } else if ( (pos_y -= movimento) > limite_superior_eixoY) {
+                pos_y -= movimento; //posicao atual + 5 * (1,2 ou 3)
             } else {
                 pos_y == limite_superior_eixoY; //fica no limite da tela
             }
         }
         //direita
         else if ( direcao_sprite == 6 ){
-            if (*labirinto[i][j] == '#') {
-                pos_x = pos_x;
-            } else if ( (pos_x += (5*velocidade)) < limite_direito_eixoX) { // 
-                pos_x += (5*velocidade); //posicao atual + 10 * (1,2 ou 3)
+            if (*labirinto[i+movimento][j] != '#') {
+                pos_x += movimento; //sem parede, pode mover
+            } else if ((*labirinto[i+movimento][j] == '#')){
+                pos_x = pos_x; //parede, fica onde esta
+            } else if ( (pos_x += movimento) < limite_direito_eixoX) {
+                pos_x += movimento; //posicao atual + 5 * (1,2 ou 3)
             } else {
                 pos_x == limite_direito_eixoX; //fica no limite da tela
             }
         }
         //esquerda
         else if ( direcao_sprite == 4 ){
-            if (*labirinto[i][j] == '#') {
-                pos_x = pos_x;
-            } else if ( (pos_x -= (5*velocidade)) > limite_esquerdo_eixoX) {                             
-                pos_x -= (5*velocidade); //posicao atual + 10 * (1,2 ou 3)
+            if (*labirinto[i-movimento][j] != '#') {
+                pos_x -= movimento; //sem parede, pode mover
+            } else if ((*labirinto[i-movimento][j] == '#')){
+                pos_x = pos_x; //parede, fica onde esta
+            } else if ( (pos_x -= movimento) > limite_esquerdo_eixoX) {                             
+                pos_x -= movimento; //posicao atual + 5 * (1,2 ou 3)
             } else {
                 pos_x == limite_direito_eixoX; //fica no limite da tela
             }
         }
-
         pos_xy_20b = (pos_x << 10 | pos_y);
         usleep(10000);
     }
