@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdint.h>
 
 extern void inicializa_fpga();
 extern void fecha_dev_mem();
@@ -9,6 +10,10 @@ extern void escreve_bloco(uint16_t posicao, uint16_t cor);
 
 #define largura_menu 80
 #define altura_menu 60
+
+uint16_t converte_em_bgr(uint8_t rgb);
+void cria_menu(uint16_t dados_do_menu[largura_menu][altura_menu]);
+int main();
 
 //Dados da imagem para formar um menu (80x60) em formato RRRGGGBB - 1 byte por pixel
 uint8_t dados_do_menu[largura_menu][altura_menu] = {

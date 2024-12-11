@@ -1,12 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
+#include <time.h>
 #include "proc_grafico.h"
 #include "mouse.h"
 #include "acelerometro.c"
-#include <math.h>
-#include "ovni.c"
-#include "portal.c"
+#include <unistd.h>
+#include <stdint.h>
 
 extern void fecha_dev_mem();
 extern void inicializa_fpga();
@@ -15,6 +14,7 @@ extern void apaga_bloco(uint16_t posicao);
 extern void altera_cor_bg(uint16_t cor, uint8_t registrador);
 extern void apaga_cor_bg(uint8_t registrador);
 extern void exibe_sprite(uint8_t sp, uint32_t xy, uint16_t offset, uint8_t registrador);
+extern int acess_btn();
 
 extern int abre_mouse();
 extern int le_mouse_orientacao(int fd);
@@ -31,6 +31,11 @@ void inicializaLabirinto();
 void imprimeLabirinto();
 int validaPosicao(int x, int y);
 void geraLabirinto(int x, int y);
+void imprimeLabirintoVGA();
+void apagaLabirinto();
+void move_sprite();
+void colisao_labirinto();
+int main();
 
 // Função para inicializar o labirinto com paredes
 void inicializaLabirinto() {
@@ -160,7 +165,7 @@ void move_sprite() {
     }
 }
 
-void colisao() {
+void colisao_labirinto() {
     // tela 640 x 480 
     // labirinto 60 x 80
     // i -> 10,66 j -> 6
@@ -171,7 +176,7 @@ void colisao() {
     #define limite_direito_eixoX 550 //esta para o x 59 do labirinto
 
     uint16_t pos_x = 0;
-    uint16_t pos_y = 30;
+    uint16_t pos_y = 30; //posicao inicial p1
 
     pos_x &= mascara_10bits;
     pos_y &= mascara_10bits;
@@ -181,104 +186,21 @@ void colisao() {
     
     uint32_t pos_xy_20b_ant = (pos_xy_20b); //inicia com posicao anterior igual a posicao atual
 
-    int direcao_sprite;
+    int direcao_sprite, prox_j, prox_i;
+    uint16_t prox_pos_y, prox_pos_x;
+
     int velocidade = 1;    
+    float divisor_i = 10.6666666667;
+    int divisor_j = 6;
 
     while (1) {
         pos_y = (pos_xy_20b & mascara_10bits);
         pos_x = ((pos_xy_20b >> 10) & mascara_10bits);
 
-        direcao_sprite = get_movimento(&velocidade); //8 cima, 2 baixo, 6 direita, 4 esquerda, 0 sem movimento
+        int j = (pos_y / divisor_j) - 1; //pos y normalizada
+        int i = (pos_x / divisor_i); //pos x normalizada
 
-        //apaga o sprite exibido na posicao anterior
-        exibe_sprite(0, pos_xy_20b_ant, 1, 1);//sp = 0 - desabilita sprite
-        pos_xy_20b_ant = pos_xy_20b;
-    
-        //exibe o sprite na posicao atual
-        exibe_sprite(1, pos_xy_20b, 1, 1);//sp = 1 - habilita sprite
-
-        //descendo
-        if ( direcao_sprite == 2 ){
-            if ( (pos_y += (5*velocidade)) < limite_inferior_eixoY ) {
-                pos_y += (5*velocidade); //posicao atual + 10 * (1,2 ou 3)
-            } else {
-                pos_y == limite_inferior_eixoY; //fica no limite da tela
-            }
-        }
-        //subindo
-        else if ( direcao_sprite == 8 ){
-            if ( (pos_y -= (5*velocidade)) > limite_superior_eixoY) {
-                pos_y -= (5*velocidade); //posicao atual + 10 * (1,2 ou 3)
-            } else {
-                pos_y == limite_superior_eixoY; //fica no limite da tela
-            }
-        }
-        //direita
-        else if ( direcao_sprite == 6 ){
-            if ( (pos_x += (5*velocidade)) < limite_direito_eixoX) { // 
-                pos_x += (5*velocidade); //posicao atual + 10 * (1,2 ou 3)
-            } else {
-                pos_x == limite_direito_eixoX; //fica no limite da tela
-            }
-        }
-        //esquerda
-        else if ( direcao_sprite == 4 ){
-            if ( (pos_x -= (5*velocidade)) > limite_esquerdo_eixoX) {                             
-                pos_x -= (5*velocidade); //posicao atual + 10 * (1,2 ou 3)
-            } else {
-                pos_x == limite_direito_eixoX; //fica no limite da tela
-            }
-        }
-
-        float divisor_i = 10.66;
-        int divisor_j = 6;
-        float i_float = pos_x / divisor_i;
-        int j = (pos_y / divisor_j) - 1;
-        int i = (round(i_float)) - 1;
-        
-        printf("x = %d; y = %d\n", i, j);
-
-        pos_xy_20b = (pos_x << 10 | pos_y);
-        usleep(10000);
-    }
-}
-
-
-void colisao_labirinto(*labirinto[i][j]) {
-    // tela 640 x 480 
-    // labirinto 60 x 80
-    // i -> 10,66 j -> 6
-    #define mascara_10bits 0b1111111111
-    #define limite_superior_eixoY 33  //esta para o y 5 do labirinto 
-    #define limite_inferior_eixoY 428 //esta para o y 75 do labirinto 
-    #define limite_esquerdo_eixoX 35 //esta para o x 5 do labirinto 
-    #define limite_direito_eixoX 550 //esta para o x 59 do labirinto
-
-    uint16_t pos_x = 0;
-    uint16_t pos_y = 30;
-
-    pos_x &= mascara_10bits;
-    pos_y &= mascara_10bits;
-    
-    uint32_t pos_xy_20b;
-    pos_xy_20b = (pos_x << 10 | pos_y);
-    
-    uint32_t pos_xy_20b_ant = (pos_xy_20b); //inicia com posicao anterior igual a posicao atual
-
-    int direcao_sprite;
-    int velocidade = 1;    
-
-    while (1) {
-        pos_y = (pos_xy_20b & mascara_10bits);
-        pos_x = ((pos_xy_20b >> 10) & mascara_10bits);
-
-        float divisor_i = 10.66;
-        int divisor_j = 6;
-        float i_float = pos_x / divisor_i;
-
-        int j = (pos_y / divisor_j) - 1;
-        int i = (round(i_float)) - 1;
-        printf("x = %d; y = %d\n", i, j);
+        printf("x = %d; y = %d labirinto YX = %c \n", i, j, labirinto[j][i]);
 
         direcao_sprite = get_movimento(&velocidade); //8 cima, 2 baixo, 6 direita, 4 esquerda, 0 sem movimento
 
@@ -293,50 +215,34 @@ void colisao_labirinto(*labirinto[i][j]) {
 
         //descendo
         if ( direcao_sprite == 2 ){
-            if (*labirinto[i][j+movimento] != '#') {
-                pos_y += movimento; //sem parede, pode mover
-            } else if ((*labirinto[i][j+movimento] == '#')){
-                pos_y = pos_y; //parede, fica onde esta
-            } else if ( (pos_y += movimento) < limite_inferior_eixoY ) {
-                pos_y += movimento; //posicao atual + 5 * (1,2 ou 3)
-            } else {
-                pos_y == limite_inferior_eixoY; //fica no limite da tela
+            prox_pos_y = pos_y + movimento;
+            prox_j = prox_pos_y / divisor_j;
+            if( labirinto[prox_j][i] != '#' ){ //sem parede, pode mover
+                pos_y = prox_pos_y;
             }
         }
         //subindo
         else if ( direcao_sprite == 8 ){
-            if (*labirinto[i][j-movimento] != '#') {
-                pos_y -= movimento; //sem parede, pode mover
-            } else if ((*labirinto[i][j-movimento] == '#')){
-                pos_y = pos_y; //parede, fica onde esta
-            } else if ( (pos_y -= movimento) > limite_superior_eixoY) {
-                pos_y -= movimento; //posicao atual + 5 * (1,2 ou 3)
-            } else {
-                pos_y == limite_superior_eixoY; //fica no limite da tela
+            prox_pos_y = pos_y - movimento;
+            prox_j = prox_pos_y / divisor_j;
+            if (labirinto[prox_j][i] != '#') { //sem parede, pode mover
+                pos_y = prox_pos_y;
             }
         }
         //direita
         else if ( direcao_sprite == 6 ){
-            if (*labirinto[i+movimento][j] != '#') {
-                pos_x += movimento; //sem parede, pode mover
-            } else if ((*labirinto[i+movimento][j] == '#')){
-                pos_x = pos_x; //parede, fica onde esta
-            } else if ( (pos_x += movimento) < limite_direito_eixoX) {
-                pos_x += movimento; //posicao atual + 5 * (1,2 ou 3)
-            } else {
-                pos_x == limite_direito_eixoX; //fica no limite da tela
-            }
+            prox_pos_x = pos_x + movimento;
+            prox_i = prox_pos_x / divisor_i;
+            if (labirinto[j][prox_i] != '#') { //sem parede, pode mover
+                pos_x = prox_pos_x; 
+            } 
         }
         //esquerda
         else if ( direcao_sprite == 4 ){
-            if (*labirinto[i-movimento][j] != '#') {
-                pos_x -= movimento; //sem parede, pode mover
-            } else if ((*labirinto[i-movimento][j] == '#')){
-                pos_x = pos_x; //parede, fica onde esta
-            } else if ( (pos_x -= movimento) > limite_esquerdo_eixoX) {                             
-                pos_x -= movimento; //posicao atual + 5 * (1,2 ou 3)
-            } else {
-                pos_x == limite_direito_eixoX; //fica no limite da tela
+            prox_pos_x = pos_x - movimento;
+            prox_i = prox_pos_x / divisor_i;
+            if (labirinto[j][prox_i] != '#') { //sem parede, pode mover
+                pos_x = prox_pos_x; 
             }
         }
         pos_xy_20b = (pos_x << 10 | pos_y);
@@ -383,30 +289,34 @@ int main() {
     uint32_t pos_xy_20b;
     pos_xy_20b = (pos_x << 10 | pos_y);
 
-    gera_sprite_ovni_ofst1();
-    gera_sprite_ovni_ofst2();
-    gera_sprite_ovni_ofst3();
-    gera_sprite_portal();
-
     for(int i = 0; i < ALTURA; i++) { 
         for(int j = 0; j < LARGURA; j++) {
             if(labirinto[i][j] == '1'){
-                exibe_sprite(1, pos_xy_20b, 1, 1);
+                exibe_sprite(3, pos_xy_20b, 1, 5);
             }
             else if(labirinto[i][j] == '2'){
-                exibe_sprite(1, pos_xy_20b, 2, 2);
+                exibe_sprite(4, pos_xy_20b, 2, 6);
             }
         }
     }
+
+    //imprimeLabirintoTerminal();
     
-    imprimeLabirintoTerminal();
+    //int num = acess_btn();
+    //while(num != 1){
+    //    printf("leu o botão viu negah, num: %d \n", num);
+    //    if(num == 1){
+            for (int i = 0; i < 1500; i++) {
+                imprimeLabirintoVGA();
+                //apagaLabirinto();
+            }
+    //    }
+    //}
     
-    for (int i = 0; i < 1500; i++) {
-        //imprimeLabirintoVGA();
-        //apagaLabirinto();
-    }
-    
-    colisao_labirinto(&labirinto);
+    //move_sprite();
+    //colisao();
+
+    colisao_labirinto();
 
     desmapear_memoria();
     fecha_dev_mem();

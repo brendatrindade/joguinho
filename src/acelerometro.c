@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <unistd.h>
+#include <time.h>
 
 #define HPS_PHYS_BASE 0xFF000000
 #define HPS_SPAN 0x01000000   
@@ -45,6 +46,30 @@ volatile uint32_t *base_hps; //ponteiro para a memoria HPS mapeada
 int mg_por_lsb = 2; //mg por bit menos significativo para conversão
 int16_t offset_x, offset_y, offset_z; //offset dos eixos X, Y e Z para calibracao
 int fd;
+
+void escrever_registrador(uint32_t endereco, uint32_t valor);
+uint32_t ler_registrador(uint32_t endereco);
+void inicializar_i2c();
+void verificar_status_i2c();
+void ler_reg_acel(uint8_t endereco, uint8_t *valor);
+void escrever_reg_acel(uint8_t endereco, uint8_t valor);
+void escrever_i2c(uint8_t endereco_reg, uint8_t valor);
+uint8_t ler_i2c(uint8_t endereco_reg);
+void inicializar_acelerometro();
+uint8_t ler_devid_acelerometro();
+void ler_aceleracao_x(int16_t *x);
+void ler_aceleracao_y(int16_t *y);
+void ler_aceleracao_z(int16_t *z);
+void ler_aceleracao_xy(int16_t *x, int16_t *y);
+int dados_prontos();
+void calibrar_acelerometro(int16_t *offset_x, int16_t *offset_y, int16_t *offset_z);
+int configurar_acelerometro();
+int desmapear_memoria();
+int define_velocidade(float valor_g);
+int get_movimento(int *velocidade);
+int get_direcao_movimento_x(int *velocidade);
+int get_direcao_movimento_y(int *velocidade);
+int get_direcao_movimento_z();
 
 void escrever_registrador(uint32_t endereco, uint32_t valor) {
    *(volatile uint32_t*)(base_hps + (endereco - HPS_PHYS_BASE) / 4) = valor; //endereco inicial da regiao mapeada na memoria virtual + ( endereco do registrador na memoria fisica - endereco inicial da regiao mapeada na memoria fisica )
@@ -276,7 +301,7 @@ int get_movimento(int *velocidade){
    return 0; //sem movimento   
 }
 
-
+//Movimento para direita e para esquerda
 int get_direcao_movimento_x(int *velocidade){
    int16_t x_bruto;
    float x_g;

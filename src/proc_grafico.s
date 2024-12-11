@@ -425,12 +425,17 @@ apaga_cor_bg:
 @ acess_btn: função para ler os o boões
 
 acess_btn:    @função que acessa os botões
+    @ Salvando contexto
+    push {r0-r11, lr}
 
-    ldr r11, =mapped_address    @ Endereço base mapeado
+    ldr r11, =end_base    @ Endereço base mapeado
     ldr r11, [r11]
 
     ldr r0, [r11, #0x0]  @endereço base botões
-    bx lr
+
+    @ Restaurando contexto
+    pop {r0-r11, pc}
+    bx lr
 
 @_________________________________________________________________________________________________________________________________________________________________________
 

@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdint.h>
 
 extern void inicializa_fpga();
 extern void fecha_dev_mem();
@@ -10,6 +11,14 @@ extern void altera_pixel_sprite(uint16_t cor, uint16_t endereco);
 
 #define largura_sprite 20
 #define altura_sprite 20
+
+uint16_t converte_em_bgr(uint8_t rgb);
+void cria_sprite(uint16_t end_base, uint16_t dados_do_sprite[altura_sprite][largura_sprite]);
+void gera_sprite_explo_ofst11();
+void gera_sprite_explo_ofst12();
+void gera_sprite_explo_ofst13();
+void animacao();
+int main();
 
 //Dados da imagem para formar um sprite (20x20) em formato RRRGGGBB - 1 byte por pixel
 uint8_t dados_da_imagem_1[altura_sprite][largura_sprite] = {

@@ -32,6 +32,6 @@ void altera_cor_bg(uint16_t cor, uint8_t registrador);
 
 void apaga_cor_bg(uint8_t registrador);
 
-void acess_btn();
+int acess_btn();
 
 #endif /* PROC_GRAFICO_H */

@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 #include "proc_grafico.h"
+#include <unistd.h>
 
 #define LARGURA 91 // Largura do labirinto (deve ser ímpar)
 #define ALTURA 27  // Altura do labirinto (deve ser ímpar)
@@ -16,6 +17,7 @@ void imprimeLabirinto();
 void imprime();
 int validaPosicao(int x, int y);
 void geraLabirinto(int x, int y);
+int main();
 
 // Função para inicializar o labirinto com paredes
 void inicializaLabirinto() {
