@@ -250,6 +250,19 @@ void colisao_labirinto() {
     }
 }
 
+int button() {
+    switch (acess_btn()) {
+    case 0b1110:
+        return 1;  // Botão 1
+    case 0b1101:
+        return 2;  // Botão 2
+    case 0b1011:
+        return 3;  // Botão 3
+    default:
+        return 0; //não apertou nenhum botão
+    }
+}
+
 int main() {
     inicializa_fpga();
     configurar_acelerometro();
@@ -302,17 +315,17 @@ int main() {
 
     //imprimeLabirintoTerminal();
     
-    //int num = acess_btn();
-    //while(num != 1){
-    //    printf("leu o botão viu negah, num: %d \n", num);
-    //    if(num == 1){
-            for (int i = 0; i < 1500; i++) {
-                imprimeLabirintoVGA();
-                //apagaLabirinto();
-            }
-    //    }
-    //}
-    
+    int num = button();
+    while(num != 1 || num != 2 || num != 3){
+        printf("entrou no while, num: %d \n", num);
+        num = button();
+    }
+    printf("Deu bom. o botão funcionou! num: %d", num);
+
+    for (int i = 0; i < 1500; i++) {
+            imprimeLabirintoVGA();
+            //apagaLabirinto();
+    }
     //move_sprite();
     //colisao();
 
