@@ -432,15 +432,15 @@ int main(){
         converte_labirinto_para_sprite(x_lab,y_lab, &pos_x, &pos_y);
     }
 
-/*
-//descendo
-    prox_pos_y = pos_y + 15;
-    colidiu = colide(pos_x, prox_pos_y);
-    if( !colidiu ){ //sem parede, pode mover
-        converte_sprite_para_labirinto(pos_x,prox_pos_y, &x_lab, &y_lab);
-        printf("Sem parede, pode mover! Vai para labirinto %c", labirinto[x_lab][y_lab]);
-    }
-*/
+    /*
+    //descendo
+        prox_pos_y = pos_y + 15;
+        colidiu = colide(pos_x, prox_pos_y);
+        if( !colidiu ){ //sem parede, pode mover
+            converte_sprite_para_labirinto(pos_x,prox_pos_y, &x_lab, &y_lab);
+            printf("Sem parede, pode mover! Vai para labirinto %c", labirinto[x_lab][y_lab]);
+        }
+    */
 
     //colisao_labirinto();
     //colisao_labirinto1();
