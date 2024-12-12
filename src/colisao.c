@@ -180,7 +180,23 @@ void converte_labirinto_para_sprite(int x_lab, int y_lab, uint16_t *pos_x, uint1
     //printf("X sprite: %d Y sprite: %d \n", *pos_x, *pos_y);
 }
 
-void colisao_labirinto() {
+//Verifica inicio e fim do sprite
+int colide(int prox_pos_x, int prox_pos_y) { 
+    int verifica_x[] = {prox_pos_x, prox_pos_x + 19};
+    int verifica_y[] = {prox_pos_y, prox_pos_y + 19};
+    int q,w;
+    for( q= 0; q < 2; q++) {
+        for( w = 0; w < 2; w++) {
+            converte_sprite_para_labirinto(verifica_x[q], verifica_y[w], &i, &j);
+            if (labirinto[i][j] == '#') {
+                return 1;  // Tem parede
+            }
+        }
+    }
+    return 0;  // Sem colisao
+}
+
+void colisao_labirinto2() {
     uint16_t pos_x = 53;
     uint16_t pos_y = 0; //posicao inicial p1
 
@@ -192,7 +208,7 @@ void colisao_labirinto() {
     
     uint32_t pos_xy_20b_ant = (pos_xy_20b); //inicia com posicao anterior igual a posicao atual
 
-    int direcao_sprite, i, j;
+    int direcao_sprite, i, j, movimento, colidiu;
     uint16_t prox_pos_y, prox_pos_x;
 
     int velocidade = 1;    
@@ -210,7 +226,76 @@ void colisao_labirinto() {
         //exibe o sprite na posicao atual
         exibe_sprite(1, pos_xy_20b, 1, 1);//sp = 1 - habilita sprite
 
-        int movimento = 5*velocidade;
+        movimento = 5*velocidade;
+
+        //descendo
+        if ( direcao_sprite == 2 ){
+            prox_pos_y = pos_y + movimento;
+            colidiu = colide(pos_x, prox_pos_y);
+            if( !colidiu ){ //sem parede, pode mover
+                pos_y = prox_pos_y;
+            }
+        }
+        //subindo
+        else if ( direcao_sprite == 8 ){
+            prox_pos_y = pos_y - movimento;
+            colidiu = colide(pos_x, prox_pos_y);
+            if( !colidiu ){ //sem parede, pode mover
+                pos_y = prox_pos_y;
+            }
+        }
+        //direita
+        else if ( direcao_sprite == 6 ){
+            prox_pos_x = pos_x + movimento;
+            colidiu = colide(prox_pos_x, pos_y);
+            if( !colidiu ){ //sem parede, pode mover
+                pos_x = prox_pos_x; 
+            }
+        }
+        //esquerda
+        else if ( direcao_sprite == 4 ){
+            prox_pos_x = pos_x - movimento;
+            colidiu = colide(prox_pos_x, pos_y);
+            if( !colidiu ){ //sem parede, pode mover
+                pos_x = prox_pos_x; 
+            }
+        }
+        pos_xy_20b = (pos_x << 10 | pos_y);
+        usleep(10000);
+    }
+}
+
+void colisao_labirinto() {
+    uint16_t pos_x = 53;
+    uint16_t pos_y = 0; //posicao inicial p1
+
+    pos_x &= mascara_10bits;
+    pos_y &= mascara_10bits;
+    
+    uint32_t pos_xy_20b;
+    pos_xy_20b = (pos_x << 10 | pos_y);
+    
+    uint32_t pos_xy_20b_ant = (pos_xy_20b); //inicia com posicao anterior igual a posicao atual
+
+    int direcao_sprite, i, j, movimento;
+    uint16_t prox_pos_y, prox_pos_x;
+
+    int velocidade = 1;    
+
+    while (1) {
+        pos_y = (pos_xy_20b & mascara_10bits);
+        pos_x = ((pos_xy_20b >> 10) & mascara_10bits);
+
+        direcao_sprite = get_movimento(&velocidade); //8 cima, 2 baixo, 6 direita, 4 esquerda, 0 sem movimento
+
+        //apaga o sprite exibido na posicao anterior
+        exibe_sprite(0, pos_xy_20b_ant, 1, 1);//sp = 0 - desabilita sprite
+        pos_xy_20b_ant = pos_xy_20b;
+    
+        //exibe o sprite na posicao atual
+        exibe_sprite(1, pos_xy_20b, 1, 1);//sp = 1 - habilita sprite
+
+        movimento = 5*velocidade;
 
         //descendo
         if ( direcao_sprite == 2 ){
@@ -247,6 +332,8 @@ void colisao_labirinto() {
         }
         pos_xy_20b = (pos_x << 10 | pos_y);
         usleep(10000);
+
+
     }
 }
 
@@ -311,9 +398,27 @@ int main(){
     //printf("Lab %c", labirinto[x_lab][y_lab]);
 
     colisao_labirinto();
+    //colisao_labirinto1();
 
     desmapear_memoria();
     fecha_dev_mem();
     return 0;
 
 }
+
+/*
+Resolução VGA - sprites:    x 640 x 480 y
+Resolução VGA - labirinto:  x  60 x  80 y
+
+LABIRINTO:
+  y y y y y ... y(79)
+x
+.
+.
+.
+x
+(59)
+
+X: 640/60 - 10.67 
+Y: 480/80 - 6
+*/
