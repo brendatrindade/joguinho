@@ -21,26 +21,46 @@ extern int le_mouse_orientacao(int fd);
 extern int le_mouse_direcao(int fd, uint16_t *x, uint16_t *y);
 extern int teste_leitura(int fd);
 
-#define LARGURA 80 // Largura do labirinto (deve ser ímpar)
-#define ALTURA 60  // Altura do labirinto (deve ser ímpar)
-#define ESPESSURA 4 // Espessura das paredes e caminhos
+#define ALTURA_LAB 80   // Altura do labirinto
+#define LARGURA_LAB 60  // Largura do labirinto
+#define ESPESSURA 4     // Espessura das paredes e caminhos
+#define mascara_10bits 0b1111111111
 
-char labirinto[ALTURA][LARGURA];
+char labirinto[LARGURA_LAB][ALTURA_LAB];
 
+// Vetores para movimentação (cima, baixo, esquerda, direita)
+int dx[] = {0, 0, -1, 1};
+int dy[] = {-1, 1, 0, 0};
+
+int arredonda_div(float numero_float);
 void inicializaLabirinto();
 void imprimeLabirinto();
 int validaPosicao(int x, int y);
 void geraLabirinto(int x, int y);
 void imprimeLabirintoVGA();
 void apagaLabirinto();
-void move_sprite();
+void converte_sprite_para_labirinto(uint16_t pos_x, uint16_t pos_y, int *x_lab, int *y_lab);
+void converte_labirinto_para_sprite(int x_lab, int y_lab, uint16_t *pos_x, uint16_t *pos_y);
 void colisao_labirinto();
 int main();
 
+int arredonda_div(float numero_float) {
+    int inteiro = (int)numero_float;
+    float decimal = numero_float - inteiro;
+
+    //arredonda para cima
+    if (decimal > 0.49) {
+        int arredondado = inteiro + 1;
+        return arredondado;
+    }
+    //mantem a parte inteira
+    return inteiro;
+}
+
 // Função para inicializar o labirinto com paredes
 void inicializaLabirinto() {
-    for (int i = 0; i < ALTURA; i++) {
-        for (int j = 0; j < LARGURA; j++) {
+    for (int i = 0; i < LARGURA_LAB; i++) {
+        for (int j = 0; j < ALTURA_LAB; j++) {
             labirinto[i][j] = '#';
         }
     }
@@ -48,21 +68,17 @@ void inicializaLabirinto() {
 
 // Função para imprimir o labirinto
 void imprimeLabirintoTerminal() {
-    for (int i = 0; i < ALTURA; i++) {
-        for (int j = 0; j < LARGURA; j++) {
+    for (int i = 0; i < LARGURA_LAB; i++) {
+        for (int j = 0; j < ALTURA_LAB; j++) {
             printf("%c", labirinto[i][j]);
         }
         printf("\n");
     }
 }
 
-// Vetores para movimentação (cima, baixo, esquerda, direita)
-int dx[] = {0, 0, -1, 1};
-int dy[] = {-1, 1, 0, 0};
-
 // Função para verificar se a posição é válida e se pode ser cavada
 int validaPosicao(int x, int y) {
-    if (x < ESPESSURA || y < ESPESSURA || x >= ALTURA - ESPESSURA || y >= LARGURA - ESPESSURA) {
+    if (x < ESPESSURA || y < ESPESSURA || x >= LARGURA_LAB - ESPESSURA || y >= ALTURA_LAB - ESPESSURA) {
         return 0; // Fora dos limites
     }
     return labirinto[x][y] == '#'; // Cavar apenas se a posição for parede
@@ -103,10 +119,9 @@ void geraLabirinto(int x, int y) {
 
 void imprimeLabirintoVGA() {
     altera_cor_bg(BRANCO, 0); //pintando fundo
-
     int i, j;
-    for(i=0;i < ALTURA;i++) { //linhas
-        for(j=0; j < LARGURA; j++) { //colunas
+    for(i=0;i < LARGURA_LAB;i++) { //linhas
+        for(j=0; j < ALTURA_LAB; j++) { //colunas
             if(labirinto[i][j] == '#'){
                 escreve_bloco( j + (i * 80), AZUL_ESCURO);
             } else if(labirinto[i][j] == 'K'){
@@ -119,62 +134,53 @@ void imprimeLabirintoVGA() {
 void apagaLabirinto() {
     apaga_cor_bg(0);
     int i, j;
-    for(i=0;i < ALTURA;i++) { //linhas
-        for(j=0; j < LARGURA; j++) { //colunas
+    for(i=0; i < LARGURA_LAB; i++) { //linhas
+        for(j=0; j < ALTURA_LAB; j++) { //colunas
                 apaga_bloco( j + (i * 80));
-            
         }
     }
 }
 
-// Exibe e move um sprite armazenado na memoria de sprites pela tela
-void move_sprite() {
-    #define INICIO_Y 358410
-    #define LIMITE_Y 358850
-    int x = 0, y = 0;
+void converte_sprite_para_labirinto(uint16_t pos_x, uint16_t pos_y, int *x_lab, int *y_lab){
+    //pos_x < 640 - pos_y < 480
 
-    #define mascara_10bits 0b1111111111
-    uint16_t pos_x = 350;
-    uint16_t pos_y = 240;
+    float float_x = (pos_x / 10.6); 
+    float float_y = (pos_y / 6);
 
-    pos_x &= mascara_10bits;
-    pos_y &= mascara_10bits;
-    
-    uint32_t pos_xy_20b;
-    pos_xy_20b = (pos_x << 10 | pos_y);
-    uint32_t pos_xy_20b_ant = (pos_xy_20b); //inicia com posicao anterior igual a posicao atual
-
-    int fd = abre_mouse();
-
-    while (1) {
-        int direcao = le_mouse_direcao(fd, &pos_x, &pos_y);
-        int orientacao = le_mouse_orientacao(fd);
-
-        // apaga o sprite exibido na posicao anterior
-        exibe_sprite(0, pos_xy_20b_ant, 5, 1); // sp = 0 -> desabilita sprite
-
-       
-        pos_x &= mascara_10bits;
-        pos_y &= mascara_10bits;
-        pos_xy_20b = (pos_x << 10 | pos_y);
-        
-         // exibe o sprite na posicao atual
-        exibe_sprite(1, pos_xy_20b, 5, 1); // sp = 1 -> habilita sprite
-        pos_xy_20b_ant = pos_xy_20b;
-
+    if (float_x > 0){
+        *x_lab = arredonda_div(float_x);
+        *x_lab -= 1;
+    } else {
+        *x_lab = arredonda_div(float_x);
     }
+    if (float_y > 0){
+        *y_lab = arredonda_div(float_y);
+        *y_lab -= 1;
+    } else {
+        *y_lab = arredonda_div(float_y);
+    }
+    //printf("Largura lab: %d Altura lab: %d \n", *x_lab, *y_lab);
+}
+
+void converte_labirinto_para_sprite(int x_lab, int y_lab, uint16_t *pos_x, uint16_t *pos_y){
+    //x_lab < 60 - y_lab < 80
+
+    if (x_lab == 0){
+        *pos_x = x_lab * 10.67; 
+    } else {
+        float float_x = (x_lab + 1) * 10.67; 
+        *pos_x = arredonda_div(float_x);
+    }
+    if (y_lab == 0){
+        *pos_y = y_lab * 6;
+    } else {
+        float float_y = (y_lab + 1) * 6;
+        *pos_y = arredonda_div(float_y);
+    }
+    //printf("X sprite: %d Y sprite: %d \n", *pos_x, *pos_y);
 }
 
 void colisao_labirinto() {
-    // tela 640 x 480 
-    // labirinto 60 x 80
-    // i -> 10,66 j -> 6
-    #define mascara_10bits 0b1111111111
-    #define limite_superior_eixoY 33  //esta para o y 5 do labirinto 
-    #define limite_inferior_eixoY 428 //esta para o y 75 do labirinto 
-    #define limite_esquerdo_eixoX 35 //esta para o x 5 do labirinto 
-    #define limite_direito_eixoX 550 //esta para o x 59 do labirinto
-
     uint16_t pos_x = 53;
     uint16_t pos_y = 0; //posicao inicial p1
 
@@ -186,21 +192,14 @@ void colisao_labirinto() {
     
     uint32_t pos_xy_20b_ant = (pos_xy_20b); //inicia com posicao anterior igual a posicao atual
 
-    int direcao_sprite, prox_j, prox_i;
+    int direcao_sprite, i, j;
     uint16_t prox_pos_y, prox_pos_x;
 
     int velocidade = 1;    
-    float divisor_i = 10.6666666667;
-    int divisor_j = 6;
 
     while (1) {
         pos_y = (pos_xy_20b & mascara_10bits);
         pos_x = ((pos_xy_20b >> 10) & mascara_10bits);
-
-        int j = (pos_y / divisor_j) - 1; //pos y normalizada
-        int i = (pos_x / divisor_i); //pos x normalizada
-
-        printf("x = %d; y = %d labirinto YX = %c \n", i, j, labirinto[j][i]);
 
         direcao_sprite = get_movimento(&velocidade); //8 cima, 2 baixo, 6 direita, 4 esquerda, 0 sem movimento
 
@@ -216,32 +215,33 @@ void colisao_labirinto() {
         //descendo
         if ( direcao_sprite == 2 ){
             prox_pos_y = pos_y + movimento;
-            prox_j = prox_pos_y / divisor_j;
-            if( labirinto[prox_j][i] != '#' ){ //sem parede, pode mover
+            converte_sprite_para_labirinto(pos_x, prox_pos_y, &i, &j);
+            if( labirinto[i][j] != '#' ){ //sem parede, pode mover
                 pos_y = prox_pos_y;
             }
         }
         //subindo
         else if ( direcao_sprite == 8 ){
             prox_pos_y = pos_y - movimento;
-            prox_j = prox_pos_y / divisor_j;
-            if (labirinto[prox_j][i] != '#') { //sem parede, pode mover
+            converte_sprite_para_labirinto(pos_x, prox_pos_y, &i, &j);
+            if (labirinto[i][j] != '#') { //sem parede, pode mover
                 pos_y = prox_pos_y;
             }
         }
         //direita
         else if ( direcao_sprite == 6 ){
             prox_pos_x = pos_x + movimento;
-            prox_i = prox_pos_x / divisor_i;
-            if (labirinto[j][prox_i] != '#') { //sem parede, pode mover
+            converte_sprite_para_labirinto(prox_pos_x, pos_y, &i, &j);
+            //printf("Lab %c", labirinto[i][j]);
+            if (labirinto[i][j] != '#') { //sem parede, pode mover
                 pos_x = prox_pos_x; 
             } 
         }
         //esquerda
         else if ( direcao_sprite == 4 ){
             prox_pos_x = pos_x - movimento;
-            prox_i = prox_pos_x / divisor_i;
-            if (labirinto[j][prox_i] != '#') { //sem parede, pode mover
+            converte_sprite_para_labirinto(prox_pos_x, pos_y, &i, &j);
+            if (labirinto[i][j] != '#') { //sem parede, pode mover
                 pos_x = prox_pos_x; 
             }
         }
@@ -250,20 +250,7 @@ void colisao_labirinto() {
     }
 }
 
-int button() {
-    switch (acess_btn()) {
-    case 0b1110:
-        return 1;  // Botão 1
-    case 0b1101:
-        return 2;  // Botão 2
-    case 0b1011:
-        return 3;  // Botão 3
-    default:
-        return 0; //não apertou nenhum botão
-    }
-}
-
-int main() {
+int main(){
     inicializa_fpga();
     configurar_acelerometro();
 
@@ -277,33 +264,32 @@ int main() {
     for (int i = 0; i <= ESPESSURA; i++) {
         labirinto[ESPESSURA][i] = ' ';
         labirinto[ESPESSURA + 1][i] = ' ';
-        labirinto[ALTURA - ESPESSURA - 1][LARGURA - ESPESSURA - i] = ' '; 
-        labirinto[ALTURA - ESPESSURA - 2][LARGURA - ESPESSURA - i] = ' '; 
+        labirinto[LARGURA_LAB - ESPESSURA - 1][ALTURA_LAB - ESPESSURA - i] = ' '; 
+        labirinto[LARGURA_LAB - ESPESSURA - 2][ALTURA_LAB - ESPESSURA - i] = ' '; 
     }
 
     // Posiciona o p1 e p2
     labirinto[ESPESSURA][0] = '1';
-    labirinto[ALTURA - ESPESSURA - 2][LARGURA - ESPESSURA] = '2';
+    labirinto[LARGURA_LAB - ESPESSURA - 2][ALTURA_LAB - ESPESSURA] = '2';
 
-    
-    for(int i = 0; i < ALTURA; i++) { 
-        for(int j = 0; j < LARGURA; j++) {
-            labirinto[i][LARGURA - 1] = 'K';
-            labirinto[i][LARGURA - 2] = 'K';
-            labirinto[i][LARGURA - 3] = 'K';
+    for(int i = 0; i < LARGURA_LAB; i++) { 
+        for(int j = 0; j < ALTURA_LAB; j++) {
+            labirinto[i][ALTURA_LAB - 1] = 'K';
+            labirinto[i][ALTURA_LAB - 2] = 'K';
+            labirinto[i][ALTURA_LAB - 3] = 'K';
         }
     }
 
-    #define mascara_10bits 0b1111111111
     uint16_t pos_x = 590;
     uint16_t pos_y = 430;
+
     pos_x &= mascara_10bits;
     pos_y &= mascara_10bits;
     uint32_t pos_xy_20b;
     pos_xy_20b = (pos_x << 10 | pos_y);
 
-    for(int i = 0; i < ALTURA; i++) { 
-        for(int j = 0; j < LARGURA; j++) {
+    for(int i = 0; i < LARGURA_LAB; i++) { 
+        for(int j = 0; j < ALTURA_LAB; j++) {
             if(labirinto[i][j] == '1'){
                 exibe_sprite(1, pos_xy_20b, 1, 5);
             }
@@ -313,25 +299,21 @@ int main() {
         }
     }
 
-    //imprimeLabirintoTerminal();
-    
-    int num = button();
-    while(num != 1 || num != 2 || num != 3){
-        printf("entrou no while, num: %d \n", num);
-        num = button();
-    }
-    printf("Deu bom. o botão funcionou! num: %d", num);
-
     for (int i = 0; i < 1500; i++) {
-            imprimeLabirintoVGA();
-            //apagaLabirinto();
+        imprimeLabirintoVGA();
+        //apagaLabirinto();
     }
-    //move_sprite();
-    //colisao();
+
+    imprimeLabirintoTerminal();
+
+    //converte_sprite_para_labirinto(53,0, &x_lab, &y_lab);
+    //converte_labirinto_para_sprite(4,0, &pos_x, &pos_y);
+    //printf("Lab %c", labirinto[x_lab][y_lab]);
 
     colisao_labirinto();
 
     desmapear_memoria();
     fecha_dev_mem();
     return 0;
+
 }
