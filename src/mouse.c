@@ -53,21 +53,21 @@ int le_mouse_direcao(int fd, uint16_t *x, uint16_t *y) {
         }
 
         if (ie.type == EV_REL) {
-            if (ie.code == REL_X) {
-                if (ie.value > 0)  {
-                    *x+=10;
-                } else {
-                    *x-=10;
-                }
-                *y=*y;
+            if (ie.code == REL_X) { //horizontal
+                // if (ie.value > 0)  {
+                //     *x+=10;
+                // } else {
+                //     *x-=10;
+                // }
+                // *y=*y;
                 return 0;
-            } else if (ie.code == REL_Y) {
-                if (ie.value > 0)  {
-                    *y+=10;
-                } else {
-                    *y-=10;
-                }
-                *x=*x;
+            } else if (ie.code == REL_Y) { //vertical
+                // if (ie.value > 0)  {
+                //     *y+=10;
+                // } else {
+                //     *y-=10;
+                // }
+                // *x=*x;
                 return 1;
             }
         }
