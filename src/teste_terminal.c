@@ -3,7 +3,7 @@
 #include <time.h>
 #include "proc_grafico.h"
 #include "mouse.h"
-#include "acelerometro.c"
+//#include "acelerometro.c"
 #include <unistd.h>
 #include <stdint.h>
 
@@ -42,7 +42,6 @@ void apagaLabirinto();
 void converte_sprite_para_labirinto(uint16_t pos_x, uint16_t pos_y, int *x_lab, int *y_lab);
 void converte_labirinto_para_sprite(int x_lab, int y_lab, uint16_t *pos_x, uint16_t *pos_y);
 void colisao_labirinto();
-void colisao_labirinto1();
 int main();
 
 int arredonda_div(float numero_float) {
@@ -119,25 +118,25 @@ void geraLabirinto(int x, int y) {
 }
 
 void imprimeLabirintoVGA() {
-    altera_cor_bg(BRANCO, 0); //pintando fundo
+    //altera_cor_bg(BRANCO, 0); //pintando fundo
     int i, j;
     for(i=0;i < ALTURA_LAB;i++) { //linhas
         for(j=0; j < LARGURA_LAB; j++) { //colunas
             if(labirinto[i][j] == '#'){
-                escreve_bloco( j + (i * 80), AZUL_ESCURO);
+                //escreve_bloco( j + (i * 80), AZUL_ESCURO);
             } else if(labirinto[i][j] == 'K'){
-                escreve_bloco( j + (i * 80), PRETO);
+                //escreve_bloco( j + (i * 80), PRETO);
             }
         }
     }
 }
 
 void apagaLabirinto() {
-    apaga_cor_bg(0);
+    //apaga_cor_bg(0);
     int i, j;
     for(i=0; i < ALTURA_LAB; i++) { //linhas
         for(j=0; j < LARGURA_LAB; j++) { //colunas
-                apaga_bloco( j + (i * 80));
+                //apaga_bloco( j + (i * 80));
         }
     }
 }
@@ -151,11 +150,13 @@ void converte_sprite_para_labirinto(uint16_t pos_x, uint16_t pos_y, int *x_lab, 
 
     if (float_x > 0){
         *y_lab = arredonda_div(float_x);
+        //*y_lab -= 1;
     } else {
         *y_lab = arredonda_div(float_x);
     }
     if (float_y > 0){
         *x_lab = arredonda_div(float_y);
+        //*x_lab -= 1;
     } else {
         *x_lab = arredonda_div(float_y);
     }
@@ -192,7 +193,7 @@ int colide(int prox_pos_x, int prox_pos_y) {
     for( q= 0; q < 2; q++) {
         for( w = 0; w < 2; w++) {
             converte_sprite_para_labirinto(verifica_x[q], verifica_y[w], &i, &j);
-            //printf("Vou verificar parede - labirinto %d,%d = %c\n", i,j, labirinto[i][j]);
+            printf("Vou verificar parede - labirinto %d,%d = %c\n", i,j, labirinto[i][j]);
             if (labirinto[i][j] == '#') {
                 printf("Tem parede - labirinto %d,%d = %c\n", i,j, labirinto[i][j]);
                 return 1; //Tem parede
@@ -203,7 +204,7 @@ int colide(int prox_pos_x, int prox_pos_y) {
     return 0; //Sem colisao 
 }
 
-
+/*
 void colisao_labirinto2() {
     uint16_t pos_x = 0;
     uint16_t pos_y = 30; //posicao inicial p1
@@ -343,10 +344,12 @@ void colisao_labirinto() {
         usleep(10000);
     }
 }
-
+*/
 int main(){
+    /*
     inicializa_fpga();
     configurar_acelerometro();
+    */
 
     srand(time(NULL)); // Semente para números aleatórios
 
@@ -388,26 +391,65 @@ int main(){
         for(int j = 0; j < LARGURA_LAB; j++) {
             if(labirinto[i][j] == '1'){
                 //printf("Sprite 1 - x lab: %d y lab: %d\n", i ,j);
-                exibe_sprite(1, pos_xy_20b, 1, 5);
+                //exibe_sprite(1, pos_xy_20b, 1, 5);
             }
             else if(labirinto[i][j] == '2'){
                 //printf("Sprite 2 - x lab: %d y lab: %d\n", i ,j);
-                exibe_sprite(1, pos_xy_20b, 2, 6);
+                //exibe_sprite(1, pos_xy_20b, 2, 6);
             }
         }
     }
-
+    /*
     for (int i = 0; i < 1500; i++) {
         imprimeLabirintoVGA();
         //apagaLabirinto();
     }
+    */
 
-    colisao_labirinto();
-    //colisao_labirinto2();
 
+
+    int x_lab, y_lab, colidiu;
+    uint16_t prox_pos_y, prox_pos_x;
+    printf("Iniciando: \n");
+    converte_labirinto_para_sprite(4,0, &pos_x, &pos_y);
+
+    printf("Posicao atual sprite: \n");
+    converte_sprite_para_labirinto(pos_x,pos_y, &x_lab, &y_lab);
+    printf("Labirinto: %c \n", labirinto[x_lab][y_lab]);
+
+    while (1){
+        printf("Posicao atual sprite: X %d Y %d - Labirinto: X %d Y %d \n", pos_x, pos_y, x_lab, y_lab);
+        //direita
+        prox_pos_x = pos_x + 15;
+        colidiu = colide(prox_pos_x, pos_y);
+        if( !colidiu ){ //sem parede, pode mover
+            converte_sprite_para_labirinto(prox_pos_x,pos_y, &x_lab, &y_lab);
+            printf("Sem parede, pode mover! Vai para labirinto: %c \n", labirinto[x_lab][y_lab]);
+        } else {
+            printf("Parede, nao pode mover! Labirinto: %c \n", labirinto[x_lab][y_lab]);
+            break;
+        }
+        converte_labirinto_para_sprite(x_lab,y_lab, &pos_x, &pos_y);
+    }
+
+/*
+//descendo
+    prox_pos_y = pos_y + 15;
+    colidiu = colide(pos_x, prox_pos_y);
+    if( !colidiu ){ //sem parede, pode mover
+        converte_sprite_para_labirinto(pos_x,prox_pos_y, &x_lab, &y_lab);
+        printf("Sem parede, pode mover! Vai para labirinto %c", labirinto[x_lab][y_lab]);
+    }
+*/
+
+    //colisao_labirinto();
+    //colisao_labirinto1();
+
+    /*
     desmapear_memoria();
     fecha_dev_mem();
     return 0;
+    */
 }
 
 /*

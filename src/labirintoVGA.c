@@ -175,8 +175,8 @@ void colisao_labirinto() {
     #define limite_esquerdo_eixoX 35 //esta para o x 5 do labirinto 
     #define limite_direito_eixoX 550 //esta para o x 59 do labirinto
 
-    uint16_t pos_x = 53;
-    uint16_t pos_y = 0; //posicao inicial p1
+    uint16_t pos_x = 0;
+    uint16_t pos_y = 30; //posicao inicial p1
 
     pos_x &= mascara_10bits;
     pos_y &= mascara_10bits;
