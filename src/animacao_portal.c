@@ -8,6 +8,7 @@
 extern void inicializa_fpga(); //retirar
 extern void fecha_dev_mem(); //retirar
 
+int usleep(useconds_t usec);
 void gera_sprite_portal_ofst4();
 void gera_sprite_portal_ofst5();
 void gera_sprite_portal_ofst6();

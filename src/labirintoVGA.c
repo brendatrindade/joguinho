@@ -27,6 +27,7 @@ extern int teste_leitura(int fd);
 
 char labirinto[ALTURA][LARGURA];
 
+int usleep(useconds_t usec);
 void inicializaLabirinto();
 void imprimeLabirinto();
 int validaPosicao(int x, int y);

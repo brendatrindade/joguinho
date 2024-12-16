@@ -3,7 +3,6 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <time.h>
 
 #define HPS_PHYS_BASE 0xFF000000
 #define HPS_SPAN 0x01000000   
@@ -44,9 +43,10 @@
 
 volatile uint32_t *base_hps; //ponteiro para a memoria HPS mapeada
 int mg_por_lsb = 2; //mg por bit menos significativo para conversão
-int16_t offset_x, offset_y, offset_z; //offset dos eixos X, Y e Z para calibracao
+int16_t offset_x, offset_y; //offset dos eixos X, Y e Z para calibracao
 int fd;
 
+int usleep(useconds_t usec);
 void escrever_registrador(uint32_t endereco, uint32_t valor);
 uint32_t ler_registrador(uint32_t endereco);
 void inicializar_i2c();
@@ -57,19 +57,13 @@ void escrever_i2c(uint8_t endereco_reg, uint8_t valor);
 uint8_t ler_i2c(uint8_t endereco_reg);
 void inicializar_acelerometro();
 uint8_t ler_devid_acelerometro();
-void ler_aceleracao_x(int16_t *x);
-void ler_aceleracao_y(int16_t *y);
-void ler_aceleracao_z(int16_t *z);
 void ler_aceleracao_xy(int16_t *x, int16_t *y);
 int dados_prontos();
-void calibrar_acelerometro(int16_t *offset_x, int16_t *offset_y, int16_t *offset_z);
+void calibrar_acelerometro(int16_t *offset_x, int16_t *offset_y);
 int configurar_acelerometro();
 int desmapear_memoria();
 int define_velocidade(float valor_g);
 int get_movimento(int *velocidade);
-int get_direcao_movimento_x(int *velocidade);
-int get_direcao_movimento_y(int *velocidade);
-int get_direcao_movimento_z();
 
 void escrever_registrador(uint32_t endereco, uint32_t valor) {
    *(volatile uint32_t*)(base_hps + (endereco - HPS_PHYS_BASE) / 4) = valor; //endereco inicial da regiao mapeada na memoria virtual + ( endereco do registrador na memoria fisica - endereco inicial da regiao mapeada na memoria fisica )
@@ -153,12 +147,6 @@ void ler_aceleracao_y(int16_t *y) {
    ler_i2c(ADXL345_INT_SOURCE); //limpa interrupcoes detectadas
 }
 
-void ler_aceleracao_z(int16_t *z) {
-   while(!dados_prontos()); //aguarda novos dados
-   *z = (ler_i2c(ADXL345_DATAZ1) << 8) | ler_i2c(ADXL345_DATAZ0); //le e combina em 16bits os dados MSB e LSB do eixo z
-   ler_i2c(ADXL345_INT_SOURCE); //limpa interrupcoes detectadas
-}
-
 void ler_aceleracao_xy(int16_t *x, int16_t *y){
    while(!dados_prontos()); //aguarda novos dados
    *x = (ler_i2c(ADXL345_DATAX1) << 8) | ler_i2c(ADXL345_DATAX0); //le e combina em 16bits os dados MSB e LSB do eixo x
@@ -170,27 +158,22 @@ int dados_prontos() {
    return (ler_i2c(ADXL345_INT_SOURCE) & 0x80) != 0; //0b10000000 - verifica o bit 7 data_ready
 }
 
-void calibrar_acelerometro(int16_t *offset_x, int16_t *offset_y, int16_t *offset_z) {
+void calibrar_acelerometro(int16_t *offset_x, int16_t *offset_y) {
    int32_t soma_x = 0;
    int32_t soma_y = 0;
-   int32_t soma_z = 0;
-   int16_t x, y, z;
+   int16_t x, y;
    int i;
 
    for (i = 0; i < AMOSTRAS_CALIBRACAO; i++) {
-      ler_aceleracao_x(&x);
-      ler_aceleracao_y(&y);
-      ler_aceleracao_z(&z);
+      ler_aceleracao_xy(&x, &y);
       soma_x += x;
       soma_y += y;
-      soma_z += z;
    }
 
    *offset_x = soma_x / AMOSTRAS_CALIBRACAO; //calcula a media de leituras obtidas por x
    *offset_y = soma_y / AMOSTRAS_CALIBRACAO; //calcula a media de leituras obtidas por y
-   *offset_z = soma_z / AMOSTRAS_CALIBRACAO; //calcula a media de leituras obtidas por z
 
-   printf("Calibracao completa \n Offset: X=%d \n Offset: Y=%d \n Offset: Z=%d \n", *offset_x, *offset_y, *offset_z);
+   printf("Calibracao completa \n Offset: X=%d \n Offset: Y=%d \n", *offset_x, *offset_y);
 }
 
 int configurar_acelerometro(){
@@ -221,14 +204,12 @@ int configurar_acelerometro(){
        }
        usleep(100000);
    }
-
    inicializar_acelerometro();
-   printf("Acelerometro inicializado\n");
 
    printf("Calibrando acelerometro...\n");
-   calibrar_acelerometro(&offset_x, &offset_y, &offset_z);
+   calibrar_acelerometro(&offset_x, &offset_y);
 
-   printf("Calibrado! Iniciando leituras de aceleracao...\n");
+   printf("Calibrado! Iniciando leituras...\n");
    return 0;
 }
 
@@ -259,8 +240,9 @@ int get_movimento(int *velocidade){
 
    int16_t x_bruto, y_bruto;
    float x_g, y_g;
-
+   
    usleep(10000);
+
    ler_aceleracao_xy(&x_bruto, &y_bruto);
 
    float fator;
@@ -274,7 +256,6 @@ int get_movimento(int *velocidade){
    y_g = valor_y * fator;
 
    //printf("\nBruto: \nX: %d Y: %d\n-------------------------\n", x_bruto, y_bruto);
-
    //printf("\nEm g: \nX: %.2f Y: %.2f\n", x_g, y_g); 
 
    if ( (x_bruto > FILTRO_MOVIMENTO) && (x_bruto > y_bruto)) { //movimento no eixo x+
@@ -299,58 +280,4 @@ int get_movimento(int *velocidade){
 
    //printf("sem movimento\n");
    return 0; //sem movimento   
-}
-
-//Movimento para direita e para esquerda
-int get_direcao_movimento_x(int *velocidade){
-   int16_t x_bruto;
-   float x_g;
-
-   ler_aceleracao_x(&x_bruto);
-
-   x_g = (x_bruto - offset_x) * (mg_por_lsb / 1000.0);
-
-   if (x_g > FILTRO_MOVIMENTO) {
-      *velocidade = define_velocidade(x_g);
-      return 1; // direita
-   } else if (x_g < -FILTRO_MOVIMENTO) {
-      *velocidade = define_velocidade(-x_g);
-      return -1; // esquerda
-   } 
-   return 0; // sem movimento   
-}
-
-//Movimento para cima e para baixo
-int get_direcao_movimento_y(int *velocidade){
-   int16_t y_bruto;
-   float y_g;
-
-   ler_aceleracao_y(&y_bruto);
-
-   y_g = (y_bruto - offset_y) * (mg_por_lsb / 1000.0);
-
-   if (y_g > FILTRO_MOVIMENTO) {
-      *velocidade = define_velocidade(y_g);
-      return 1; // direcao para cima
-   } else if (y_g < -FILTRO_MOVIMENTO) {
-      *velocidade = define_velocidade(-y_g);
-      return -1; // direcao para baixo
-   } 
-   return 0; // sem movimento   
-}
-
-int get_direcao_movimento_z(){
-   int16_t z_bruto;
-   float z_g;
-
-   ler_aceleracao_z(&z_bruto);
-
-   z_g = (z_bruto - offset_z) * (mg_por_lsb / 1000.0);
-
-   if (z_g > FILTRO_MOVIMENTO) {
-      return 1;  // frente
-   } else if (z_g < -FILTRO_MOVIMENTO) {
-      return -1; // tras
-   } 
-    return 0; // sem movimento   
 }

@@ -10,6 +10,7 @@ extern void altera_pixel_sprite(uint16_t cor, uint16_t endereco);
 #define largura_sprite 20
 #define altura_sprite 20
 
+int usleep(useconds_t usec);
 uint16_t converte_em_bgr(uint8_t rgb);
 void cria_sprite(uint16_t end_base, uint16_t dados_do_sprite[altura_sprite][largura_sprite]);
 

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
+#include "sprite.c"
 
 extern void inicializa_fpga();
 extern void fecha_dev_mem();
@@ -12,8 +13,7 @@ extern void altera_pixel_sprite(uint16_t cor, uint16_t endereco);
 #define largura_sprite 20
 #define altura_sprite 20
 
-uint16_t converte_em_bgr(uint8_t rgb);
-void cria_sprite(uint16_t end_base, uint16_t dados_do_sprite[altura_sprite][largura_sprite]);
+int usleep(useconds_t usec);
 void gera_sprite_explo_ofst11();
 void gera_sprite_explo_ofst12();
 void gera_sprite_explo_ofst13();
