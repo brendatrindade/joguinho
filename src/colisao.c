@@ -6,6 +6,7 @@
 #include "acelerometro.c"
 #include <unistd.h>
 #include <stdint.h>
+#include "ovni.c"
 
 extern void fecha_dev_mem();
 extern void inicializa_fpga();
@@ -185,9 +186,9 @@ void converte_labirinto_para_sprite(int x_lab, int y_lab, uint16_t *pos_x, uint1
 
 
 //Verifica inicio e fim do sprite
-int colide(int prox_pos_x, int prox_pos_y) { 
-    int verifica_x[] = {prox_pos_x, prox_pos_x + 1};
-    int verifica_y[] = {prox_pos_y, prox_pos_y + 1};
+int colide(uint16_t prox_pos_x, uint16_t prox_pos_y) { 
+    int verifica_x[] = {prox_pos_x, prox_pos_x + 19};
+    int verifica_y[] = {prox_pos_y, prox_pos_y + 19};
     int i,j,q,w;
     for( q= 0; q < 2; q++) {
         for( w = 0; w < 2; w++) {
@@ -196,17 +197,18 @@ int colide(int prox_pos_x, int prox_pos_y) {
             if (labirinto[i][j] == '#') {
                 printf("Tem parede - labirinto %d,%d = %c\n", i,j, labirinto[i][j]);
                 return 1; //Tem parede
+            } else if (labirinto[i][j] == 'F') {
+                return 2; //Saida Fechada
             }
         }
     }
-    printf("Sem parede - labirinto %c\n", labirinto[i][j]);
+    printf("Sem parede \n");
     return 0; //Sem colisao 
 }
 
-
-void colisao_labirinto2() {
+void colisao_labirinto() {
     uint16_t pos_x = 0;
-    uint16_t pos_y = 30; //posicao inicial p1
+    uint16_t pos_y = 39; //posicao inicial p1
 
     pos_x &= mascara_10bits;
     pos_y &= mascara_10bits;
@@ -269,84 +271,26 @@ void colisao_labirinto2() {
             }
         }
         pos_xy_20b = (pos_x << 10 | pos_y);
-        usleep(10000);
-    }
-}
-
-
-void colisao_labirinto() {
-    uint16_t pos_x = 0;
-    uint16_t pos_y = 39; //posicao inicial p1
-
-    pos_x &= mascara_10bits;
-    pos_y &= mascara_10bits;
-    
-    uint32_t pos_xy_20b;
-    pos_xy_20b = (pos_x << 10 | pos_y);
-    
-    uint32_t pos_xy_20b_ant = (pos_xy_20b); //inicia com posicao anterior igual a posicao atual
-
-    int direcao_sprite, i, j, movimento;
-    uint16_t prox_pos_y, prox_pos_x;
-
-    int velocidade = 1;    
-
-    while (1) {
-        pos_y = (pos_xy_20b & mascara_10bits);
-        pos_x = ((pos_xy_20b >> 10) & mascara_10bits);
-
-        direcao_sprite = get_movimento(&velocidade); //8 cima, 2 baixo, 6 direita, 4 esquerda, 0 sem movimento
-
-        //apaga o sprite exibido na posicao anterior
-        exibe_sprite(0, pos_xy_20b_ant, 1, 1);//sp = 0 - desabilita sprite
-        pos_xy_20b_ant = pos_xy_20b;
-    
-        //exibe o sprite na posicao atual
-        exibe_sprite(1, pos_xy_20b, 1, 1);//sp = 1 - habilita sprite
-
-        movimento = 5*velocidade;
-
-        //descendo
-        if ( direcao_sprite == 2 ){
-            prox_pos_y = pos_y + movimento;
-            converte_sprite_para_labirinto(pos_x, prox_pos_y, &i, &j);
-            if( labirinto[i][j] != '#' ){ //sem parede, pode mover
-                pos_y = prox_pos_y;
-            }
-        }
-        //subindo
-        else if ( direcao_sprite == 8 ){
-            prox_pos_y = pos_y - movimento;
-            converte_sprite_para_labirinto(pos_x, prox_pos_y, &i, &j);
-            if (labirinto[i][j] != '#') { //sem parede, pode mover
-                pos_y = prox_pos_y;
-            }
-        }
-        //direita
-        else if ( direcao_sprite == 6 ){
-            prox_pos_x = pos_x + movimento;
-            converte_sprite_para_labirinto(prox_pos_x, pos_y, &i, &j);
-            //printf("Lab %c", labirinto[i][j]);
-            if (labirinto[i][j] != '#') { //sem parede, pode mover
-                pos_x = prox_pos_x; 
-            } 
-        }
-        //esquerda
-        else if ( direcao_sprite == 4 ){
-            prox_pos_x = pos_x - movimento;
-            converte_sprite_para_labirinto(prox_pos_x, pos_y, &i, &j);
-            if (labirinto[i][j] != '#') { //sem parede, pode mover
-                pos_x = prox_pos_x; 
-            }
-        }
-        pos_xy_20b = (pos_x << 10 | pos_y);
-        usleep(10000);
+        sleep(0.01);
+        // usleep(10000);
     }
 }
 
 int main(){
     inicializa_fpga();
+
+    for (int i = 0; i < 50; i++) {
+        apagaLabirinto();
+    }
+
     configurar_acelerometro();
+
+    gera_sprite_ovni_offset1();
+    gera_sprite_ovni_offset2();
+    gera_sprite_ovni_offset3();
+    gera_sprite_portal_offset4();
+
+    
 
     srand(time(NULL)); // Semente para números aleatórios
 
@@ -358,13 +302,27 @@ int main(){
     for (int i = 0; i <= ESPESSURA; i++) {
         labirinto[ESPESSURA][i] = ' ';
         labirinto[ESPESSURA + 1][i] = ' ';
+        labirinto[ESPESSURA + 2][i] = ' ';
+        labirinto[ESPESSURA + 3][i] = ' ';
         labirinto[ALTURA_LAB - ESPESSURA - 1][LARGURA_LAB - ESPESSURA - i] = ' '; 
         labirinto[ALTURA_LAB - ESPESSURA - 2][LARGURA_LAB - ESPESSURA - i] = ' '; 
+        labirinto[ALTURA_LAB - ESPESSURA - 3][LARGURA_LAB - ESPESSURA - i] = ' '; 
+        labirinto[ALTURA_LAB - ESPESSURA - 4][LARGURA_LAB - ESPESSURA - i] = ' '; 
     }
 
     // Posiciona o p1 e p2
-    labirinto[ESPESSURA][0] = '1';
-    labirinto[ALTURA_LAB - ESPESSURA - 2][LARGURA_LAB - ESPESSURA] = '2';
+    labirinto[ESPESSURA][0] = 'F';
+    labirinto[ESPESSURA + 1][0] = 'F';
+    labirinto[ESPESSURA + 2][0] = 'F';
+    labirinto[ESPESSURA + 3][0] = 'F';
+    
+    labirinto[ESPESSURA][1] = '1';
+    labirinto[ALTURA_LAB - ESPESSURA - 4][LARGURA_LAB - ESPESSURA - 4] = '2';
+    
+    labirinto[ALTURA_LAB - ESPESSURA - 4][LARGURA_LAB - ESPESSURA] = 'F'; 
+    labirinto[ALTURA_LAB - ESPESSURA - 3][LARGURA_LAB - ESPESSURA] = 'F'; 
+    labirinto[ALTURA_LAB - ESPESSURA - 2][LARGURA_LAB - ESPESSURA] = 'F'; 
+    labirinto[ALTURA_LAB - ESPESSURA - 1][LARGURA_LAB - ESPESSURA] = 'F'; 
 
     for(int i = 0; i < ALTURA_LAB; i++) { 
         for(int j = 0; j < LARGURA_LAB; j++) {
@@ -376,8 +334,8 @@ int main(){
 
     imprimeLabirintoTerminal();
 
-    uint16_t pos_x = 615;
-    uint16_t pos_y = 439;
+    uint16_t pos_x = 575;
+    uint16_t pos_y = 423;
 
     pos_x &= mascara_10bits;
     pos_y &= mascara_10bits;
@@ -387,23 +345,21 @@ int main(){
     for(int i = 0; i < ALTURA_LAB; i++) { 
         for(int j = 0; j < LARGURA_LAB; j++) {
             if(labirinto[i][j] == '1'){
-                //printf("Sprite 1 - x lab: %d y lab: %d\n", i ,j);
-                exibe_sprite(1, pos_xy_20b, 1, 5);
+                printf("Sprite 1 - x lab: %d y lab: %d\n", i ,j);
+                //exibe_sprite(1, pos_xy_20b, 2, 5);
             }
             else if(labirinto[i][j] == '2'){
-                //printf("Sprite 2 - x lab: %d y lab: %d\n", i ,j);
-                exibe_sprite(1, pos_xy_20b, 2, 6);
+                printf("Sprite 2 - x lab: %d y lab: %d\n", i ,j);
+                exibe_sprite(1, pos_xy_20b, 4, 2);
             }
         }
     }
 
-    for (int i = 0; i < 1500; i++) {
+    for (int i = 0; i < 1200; i++) {
         imprimeLabirintoVGA();
-        //apagaLabirinto();
     }
 
     colisao_labirinto();
-    //colisao_labirinto2();
 
     desmapear_memoria();
     fecha_dev_mem();

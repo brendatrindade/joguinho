@@ -1,17 +1,17 @@
-#include "proc_grafico.h"
+#include "proc_grafico.h" //retirar
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
 #include "sprite.c"
 
-extern void inicializa_fpga();
-extern void fecha_dev_mem();
+extern void inicializa_fpga(); //retirar
+extern void fecha_dev_mem(); //retirar
 
+void gera_sprite_portal_ofst4();
 void gera_sprite_portal_ofst5();
 void gera_sprite_portal_ofst6();
 void gera_sprite_portal_ofst7();
-void gera_sprite_portal_ofst8();
 void grava_sprite_portal();
 void animacao_portal();
 int main();
@@ -114,7 +114,7 @@ uint16_t dados_da_imagem_4[altura_sprite][largura_sprite] = {
 };
 
 
-void gera_sprite_portal_ofst5(){
+void gera_sprite_portal_ofst4(){
     //Dados para formar um sprite 20x20 em formato RRR GGG BBB - 9 bits
     uint16_t dados_do_sprite[altura_sprite][largura_sprite];
     uint16_t cor_temp;
@@ -130,10 +130,10 @@ void gera_sprite_portal_ofst5(){
         }
     }
     //Escreve os dados de cada pixel na memoria de sprites. [end_base = offset * 400]
-    cria_sprite(2000, dados_do_sprite);
+    cria_sprite(1600, dados_do_sprite);
 }
 
-void gera_sprite_portal_ofst6(){
+void gera_sprite_portal_ofst5(){
     //Dados para formar um sprite 20x20 em formato RRR GGG BBB - 9 bits
     uint16_t dados_do_sprite[altura_sprite][largura_sprite];
     uint16_t cor_temp;
@@ -149,10 +149,10 @@ void gera_sprite_portal_ofst6(){
         }
     }
     //Escreve os dados de cada pixel na memoria de sprites. [end_base = offset * 400]
-    cria_sprite(2400, dados_do_sprite);
+    cria_sprite(2000, dados_do_sprite);
 }
 
-void gera_sprite_portal_ofst7(){
+void gera_sprite_portal_ofst6(){
     //Dados para formar um sprite 20x20 em formato RRR GGG BBB - 9 bits
     uint16_t dados_do_sprite[altura_sprite][largura_sprite];
     uint16_t cor_temp;
@@ -169,10 +169,10 @@ void gera_sprite_portal_ofst7(){
         }
     }
     //Escreve os dados de cada pixel na memoria de sprites. [end_base = offset * 400]
-    cria_sprite(2800, dados_do_sprite);
+    cria_sprite(2400, dados_do_sprite);
 }
 
-void gera_sprite_portal_ofst8(){
+void gera_sprite_portal_ofst7(){
         //Dados para formar um sprite 20x20 em formato RRR GGG BBB - 9 bits
     uint16_t dados_do_sprite[altura_sprite][largura_sprite];
     uint16_t cor_temp;
@@ -189,20 +189,20 @@ void gera_sprite_portal_ofst8(){
         }
     }
     //Escreve os dados de cada pixel na memoria de sprites. [end_base = offset * 400]
-    cria_sprite(3200, dados_do_sprite);
+    cria_sprite(2800, dados_do_sprite);
 }
 
 void grava_sprite_portal(){
+    gera_sprite_portal_ofst4();
     gera_sprite_portal_ofst5();
     gera_sprite_portal_ofst6();
     gera_sprite_portal_ofst7();
-    gera_sprite_portal_ofst8();
 }
 
 void animacao_portal(uint32_t pos_xy_20b, int sp){    
     while (1) {    
         int i;
-        for (i=5; i<9; i++){
+        for (i=4; i<8; i++){
             exibe_sprite(sp, pos_xy_20b, i, 10);
             usleep(100000);
         }
