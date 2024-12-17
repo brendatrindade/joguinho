@@ -128,44 +128,6 @@ void apagaLabirinto() {
     }
 }
 
-// Exibe e move um sprite armazenado na memoria de sprites pela tela
-void move_sprite() {
-    #define INICIO_Y 358410
-    #define LIMITE_Y 358850
-    int x = 0, y = 0;
-
-    #define mascara_10bits 0b1111111111
-    uint16_t pos_x = 350;
-    uint16_t pos_y = 240;
-
-    pos_x &= mascara_10bits;
-    pos_y &= mascara_10bits;
-    
-    uint32_t pos_xy_20b;
-    pos_xy_20b = (pos_x << 10 | pos_y);
-    uint32_t pos_xy_20b_ant = (pos_xy_20b); //inicia com posicao anterior igual a posicao atual
-
-    int fd = abre_mouse();
-
-    while (1) {
-        int direcao = le_mouse_direcao(fd, &pos_x, &pos_y);
-        int orientacao = le_mouse_orientacao(fd);
-
-        // apaga o sprite exibido na posicao anterior
-        exibe_sprite(0, pos_xy_20b_ant, 5, 1); // sp = 0 -> desabilita sprite
-
-       
-        pos_x &= mascara_10bits;
-        pos_y &= mascara_10bits;
-        pos_xy_20b = (pos_x << 10 | pos_y);
-        
-         // exibe o sprite na posicao atual
-        exibe_sprite(1, pos_xy_20b, 5, 1); // sp = 1 -> habilita sprite
-        pos_xy_20b_ant = pos_xy_20b;
-
-    }
-}
-
 void colisao_labirinto() {
     // tela 640 x 480 
     // labirinto 60 x 80
@@ -293,6 +255,55 @@ void elemento_passivo() {
         // exibe o sprite na posicao atual
         exibe_sprite(1, xy_passivo, 5, 1); // sp = 1 -> habilita sprite
         pas_xy_ant = xy_passivo;
+
+        usleep(10000);
+    }
+}
+
+
+// ultimos testes que fiz com mouse colidindo
+void *movimento_mouse() {
+    #define INICIO_Y 358410
+    #define LIMITE_Y 358850
+    int x = 0, y = 0;
+    int x_ou_y, p_ou_n;
+
+    #define mascara_10bits 0b1111111111
+    uint16_t pos_x = 350;
+    uint16_t pos_y = 240;
+
+    pos_x &= mascara_10bits;
+    pos_y &= mascara_10bits;
+    
+    uint32_t pos_xy_20b;
+    pos_xy_20b = (pos_x << 10 | pos_y);
+    uint32_t pos_xy_20b_ant = (pos_xy_20b); //inicia com posicao anterior igual a posicao atual
+
+    int fd = abre_mouse();
+
+    while (1) {
+        le_mouse(fd, &x_ou_y, &p_ou_n);
+
+        if ((x_ou_y == 0) && (p_ou_n < 0) && (!colide(x-10, y))) { // esquerda
+            pos_x -= 10;   
+        } else if ((x_ou_y == 0) && (p_ou_n > 0) && (!colide(x+10, y))) { // direita
+            pos_x += 10;
+        } else if ((x_ou_y == 1) && (p_ou_n > 0) && (!colide(x-10, y))) { // cima
+            pos_y -= 10;
+        } else if ((x_ou_y == 1) && (p_ou_n > 1) && (!colide(x+10, y))) { baixo
+            pos_y += 10;
+        }
+        
+        // apaga o sprite exibido na posicao anterior
+        exibe_sprite(0, pos_xy_20b_ant, 5, 1); // sp = 0 -> desabilita sprite
+
+        pos_x &= mascara_10bits;
+        pos_y &= mascara_10bits;
+        pos_xy_20b = (pos_x << 10 | pos_y);
+        
+        // exibe o sprite na posicao atual
+        exibe_sprite(1, pos_xy_20b, 5, 1); // sp = 1 -> habilita sprite
+        pos_xy_20b_ant = pos_xy_20b;
 
         usleep(10000);
     }

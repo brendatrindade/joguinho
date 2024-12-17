@@ -12,11 +12,6 @@ int le_mouse_orientacao(int fd);
 
 int le_mouse_direcao(int fd, uint16_t *x, uint16_t *y);
 
-int teste_leitura(int fd);
-
-/*
-Primeiro teste feito no LEDS.
-*/
-int teste();
+void le_mouse(int fd, int *x_ou_y, int *direcao);
 
 #endif /* MOUSE_H */
