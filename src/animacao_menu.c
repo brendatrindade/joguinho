@@ -12,7 +12,10 @@ extern void escreve_bloco(uint16_t posicao, uint16_t cor);
 #define largura_menu 80
 
 uint16_t converte_em_bgr(uint8_t rgb);
-void cria_menu(uint16_t dados_do_menu[altura_menu][largura_menu]);
+void cria_menu0(uint16_t dados_do_menu0[altura_menu][largura_menu]);
+void cria_menu1(uint16_t dados_do_menu1[altura_menu][largura_menu]);
+void apaga_menu();
+void animacao_menu();
 int main();
 
 //Dados da imagem para formar um menu (60x80) em formato RRRGGGBB - 1 byte por pixel
