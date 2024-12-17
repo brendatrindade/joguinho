@@ -215,6 +215,29 @@ void colisao_labirinto_acel(uint32_t pos_xy_20b_p1) {
     }
 }
 
+void button() {
+  int btn;
+  while(1) {
+    btn = acess_btn();
+    if(btn == 15){
+        //printf("Não esta apertando nenhum botão \n");
+        return 5;
+    } else if( btn == 14) { 
+        //printf("Print botão: 0 \n");
+        return 0;
+    } else if(btn == 13) { 
+        //printf("Print botão: 1 \n");
+        return 1;
+    } else if (btn == 11) { 
+        //printf("Print botão: 2 \n"); 
+        return 2;
+    } else if (btn == 7) {
+        //printf("Print botão: 3 \n");
+        return 3;
+    }
+    }
+}
+
 void def_saidas_labirinto(){
     // Coloca as saídas
     for (int i = 0; i <= ESPESSURA; i++) {
@@ -290,6 +313,12 @@ int main(){
     }
 
     srand(time(NULL)); // Semente para números aleatórios
+
+    int btn = button();
+    while(btn == 5){
+        btn = button();
+    }
+    printf("Botão apertado e jogo inicializado com sucesso!\n");
 
     inicializaLabirinto();
 
