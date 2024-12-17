@@ -264,6 +264,41 @@ int button() {
     }
 }
 
+
+// ELEMENTO PASSIVO = SPRITE APARECENDO EM LUGARES ALEATÓRIOS
+void elemento_passivo() {
+    #define mascara_10bits 0b1111111111
+    uint16_t pos_x_passivo = 0;
+    uint16_t pos_y_passivo = 0;
+    uint32_t xy_passivo;
+
+    pos_x_passivo &= mascara_10bits;
+    pos_y_passivo &= mascara_10bits;
+    
+    xy_passivo = (pos_x_passivo << 10 | pos_y_passivo);
+    uint32_t pas_xy_ant = (xy_passivo); //inicia com posicao anterior igual a posicao atual
+
+    while(1) {
+        srand((unsigned)time(NULL));  // Inicializa o gerador de números aleatórios
+        pos_x_passivo = (rand() % 350) + 1;   // Sorteia um número entre 1 e 4
+        pos_y_passivo = (rand() % 240) + 1;   // Sorteia um número entre 1 e 4
+
+        // apaga o sprite exibido na posicao anterior
+        exibe_sprite(0, pas_xy_ant, 5, 1); // sp = 0 -> desabilita sprite
+
+        pos_x_passivo &= mascara_10bits;
+        pos_y_passivo &= mascara_10bits;
+        xy_passivo = (pos_x_passivo << 10 | pos_y_passivo);
+        
+        // exibe o sprite na posicao atual
+        exibe_sprite(1, xy_passivo, 5, 1); // sp = 1 -> habilita sprite
+        pas_xy_ant = xy_passivo;
+
+        usleep(10000);
+    }
+}
+
+
 int main() {
     inicializa_fpga();
     configurar_acelerometro();
