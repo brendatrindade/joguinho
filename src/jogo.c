@@ -37,13 +37,14 @@ int dy[] = {-1, 1, 0, 0};
 
 int usleep(useconds_t usec);
 void inicializaLabirinto();
-void imprimeLabirinto();
+void imprimeLabirintoTerminal();
 int validaPosicao(int x, int y);
 void geraLabirinto(int x, int y);
 void imprimeLabirintoVGA();
 void apagaLabirinto();
 int colide(uint16_t prox_pos_x, uint16_t prox_pos_y);
 void colisao_labirinto_acel(uint32_t pos_xy_20b_p1);
+void button();
 void def_saidas_labirinto();
 void def_posicao_jogadores();
 void def_borda_labirinto();

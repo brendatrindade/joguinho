@@ -4,9 +4,11 @@
 #include <stdint.h>
 #include "sprite.c"
 
+int usleep(useconds_t usec);
 void gera_sprite_estrela_offset8();
 void gera_sprite_estrela_offset9();
 void gera_sprite_estrela_offset10();
+void grava_sprite_estrela();
 void animacao_estrela(uint32_t pos_xy_20b, int sp);
 
 //Dados da imagem para formar um sprite (20x20) em formato RRRGGGBB - 1 byte por pixel

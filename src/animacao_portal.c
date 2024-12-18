@@ -14,7 +14,7 @@ void gera_sprite_portal_ofst5();
 void gera_sprite_portal_ofst6();
 void gera_sprite_portal_ofst7();
 void grava_sprite_portal();
-void animacao_portal();
+void animacao_portal(uint32_t pos_xy_20b, int sp);
 int main();
 
 //Dados da imagem para formar um sprite (20x20) em formato RRRGGGBB - 1 byte por pixel

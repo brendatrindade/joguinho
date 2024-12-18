@@ -10,9 +10,6 @@ extern void fecha_dev_mem();
 extern void exibe_sprite(uint8_t sp, uint32_t xy, uint16_t offset, uint8_t registrador);
 extern void altera_pixel_sprite(uint16_t cor, uint16_t endereco);
 
-#define largura_sprite 20
-#define altura_sprite 20
-
 int usleep(useconds_t usec);
 void gera_sprite_explo_ofst11();
 void gera_sprite_explo_ofst12();
@@ -91,25 +88,6 @@ uint16_t dados_da_imagem_3[altura_sprite][largura_sprite] = {
 { 0x00,0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0xc0,0xc8,0xc8,0xc8,0xc0,0x00,0x00,0xc0,0x00,0x00,0x00,0x00 },
 { 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xc0,0xc0,0x00,0x00,0x00,0x00,0xc0,0x00,0x00,0x00,0x00 }
 };
-
-
-//Converte os dados da imagem de RGB para BGR 9 bits - formato da instrucao wsm
-uint16_t converte_em_bgr(uint8_t rgb) {
-    uint8_t r, g, b;
-    uint16_t bgr;
-
-    //Extrai cada tom (R, G e B) do formato RGB
-    r = (rgb >> 5) & 0b111; // 3 bits msb do vermelho
-    g = (rgb >> 2) & 0b111; // 3 bits do meio do verde
-    b = rgb & 0b11; // 2 bits lsb do azul
-    //ajusta o azul de 2 para 3 bits
-    b = b << 1;
-
-    //Coloca no formato BBB GGG RRR de 9 bits
-    bgr = ( (b << 6) | (g << 3) | r );
-
-    return bgr;
-}
 
 //Cria e armazena um sprite na memoria de sprites
 void cria_sprite(uint16_t end_base, uint16_t dados_do_sprite[altura_sprite][largura_sprite]) {

@@ -48,7 +48,7 @@ Dados_jogador p2_mouse;
 
 int usleep(useconds_t usec);
 void inicializaLabirinto();
-void imprimeLabirinto();
+void imprimeLabirintoTerminal();
 int validaPosicao(int x, int y);
 void geraLabirinto(int x, int y);
 void imprimeLabirintoVGA();

@@ -7,6 +7,7 @@
 void gera_sprite_ovni_offset1();
 void gera_sprite_ovni_offset2();
 void gera_sprite_ovni_offset3();
+void grava_sprite_ovni();
 
 //Dados da imagem para formar um sprite (20x20) em formato RRRGGGBB - 1 byte por pixel
 uint16_t dados_da_imagem_ovni3[altura_sprite][largura_sprite] = {
@@ -98,7 +99,6 @@ void gera_sprite_ovni_offset1(){
     //Escreve os dados de cada pixel na memoria de sprites. [end_base = offset * 400]
     cria_sprite(400, dados_do_sprite);
 }
-
 
 void gera_sprite_ovni_offset2(){
     //Dados para formar um sprite 20x20 em formato RRR GGG BBB - 9 bits

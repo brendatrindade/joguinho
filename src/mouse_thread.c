@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 int abre_mouse();
-void le_mouse(int fd);
+int le_mouse_orientacao(int fd);
 int le_mouse_direcao(int fd, uint16_t *x, uint16_t *y);
 int teste_leitura(int fd);
 int teste();

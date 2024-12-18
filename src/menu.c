@@ -13,6 +13,7 @@ extern void escreve_bloco(uint16_t posicao, uint16_t cor);
 
 uint16_t converte_em_bgr(uint8_t rgb);
 void cria_menu(uint16_t dados_do_menu[altura_menu][largura_menu]);
+void apaga_menu();
 int main();
 
 //Dados da imagem para formar um menu (60x80) em formato RRRGGGBB - 1 byte por pixel
@@ -106,7 +107,7 @@ void cria_menu(uint16_t dados_do_menu[altura_menu][largura_menu]) {
 
     for ( y = 0; y < altura_menu; y++) {
         for ( x = 0; x < largura_menu; x++) {
-            cor[z] = dados_do_menu[y][x]; //Extrai a cor de cada pixel em 9 bits BGR
+            cor[z] = converte_em_bgr( dados_do_menu[y][x] ); //Extrai a cor de cada pixel em 9 bits BGR
             z++;
         }
     }

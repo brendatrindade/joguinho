@@ -11,6 +11,7 @@ extern void escreve_bloco(uint16_t posicao, uint16_t cor);
 #define altura_menu 60
 #define largura_menu 80
 
+int usleep(useconds_t usec);
 uint16_t converte_em_bgr(uint8_t rgb);
 void cria_menu0(uint16_t dados_do_menu0[altura_menu][largura_menu]);
 void cria_menu1(uint16_t dados_do_menu1[altura_menu][largura_menu]);
@@ -173,7 +174,7 @@ void cria_menu0(uint16_t dados_do_menu0[altura_menu][largura_menu]) {
 
     for ( y = 0; y < altura_menu; y++) {
         for ( x = 0; x < largura_menu; x++) {
-            cor[z] = dados_do_menu0[y][x]; //Extrai a cor de cada pixel em 9 bits BGR
+            cor[z] = converte_em_bgr( dados_do_menu0[y][x] ); //Extrai a cor de cada pixel em 9 bits BGR
             z++;
         }
     }
@@ -195,7 +196,7 @@ void cria_menu1(uint16_t dados_do_menu1[altura_menu][largura_menu]) {
 
     for ( y = 0; y < altura_menu; y++) {
         for ( x = 0; x < largura_menu; x++) {
-            cor[z] = dados_do_menu1[y][x]; //Extrai a cor de cada pixel em 9 bits BGR
+            cor[z] = converte_em_bgr(dados_do_menu1[y][x] ); //Extrai a cor de cada pixel em 9 bits BGR
             z++;
         }
     }
