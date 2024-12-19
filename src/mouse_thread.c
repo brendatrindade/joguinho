@@ -5,10 +5,13 @@
 #include <stdint.h>
 
 int abre_mouse();
-int le_mouse_orientacao(int fd);
-int le_mouse_direcao(int fd, uint16_t *x, uint16_t *y);
+int le_mouse_valor(int fd, int *valor_x, int *valor_y);
+int define_velocidade_mouse(float valor);
+int get_movimento_mouse(int fd, int *velocidade);
 int teste_leitura(int fd);
 int teste();
+
+#define FILTRO_MOVIMENTO_MOUSE 3
 
 int abre_mouse() {
     int fd = open("/dev/input/event0", O_RDONLY);
@@ -19,67 +22,74 @@ int abre_mouse() {
     return fd;
 }
 
-// muito sensivel
-int le_mouse_orientacao(int fd) {
-    struct input_event ie;
-    int x = 0, y = 0;
-    
-    while (1) {
-        if (read(fd, &ie, sizeof(ie)) != sizeof(ie)) {
-            perror("Erro ao ler o evento");
-            break;
-        }
+int le_mouse_valor(int fd, int *valor_x, int *valor_y) {
+    struct input_event ie; // struct que recebe as informações do mouse
+    int x, y;
+    while (read(fd, &ie, sizeof(struct input_event)) > 0) {
 
         if (ie.type == EV_REL) {
             if (ie.code == REL_X) { 
-                x = ie.value; // direita = 1; esquerda = -1
-                if (x == 1){
+                x = ie.value;
+                *valor_x = x;
+                if (x > 0){
                     return 6; //direita
-                } else if (x == -1){
+                } else if (x < 0){
                     return 4; //esquerda
                 }
             } else if (ie.code == REL_Y) {
-                y = ie.value; // baixo = 1; cima = -1
-                if (y == 1){
+                y = ie.value;
+                *valor_y = y;
+                if (y > 0){
                     return 2; //baixo
-                } else if (y == -1){
+                } else if (y < 0){
                     return 8; //cima
                 }
             }
         }
     }
+    close(fd);
+    return 0;
 }
 
-int le_mouse_direcao(int fd, uint16_t *x, uint16_t *y) {
-    struct input_event ie;
-    //int x = 0, y = 0;
-    
-    while (1) {
-        if (read(fd, &ie, sizeof(ie)) != sizeof(ie)) {
-            perror("Erro ao ler o evento");
-            break;
-        }
+// Define a velocidade com base na aceleração
+int define_velocidade_mouse(float valor) {
+   if (valor < ( FILTRO_MOVIMENTO_MOUSE * 4)) {
+      //printf("velocidade 1");
+      return 1; //velocidade baixa
+   } else if (valor < ( FILTRO_MOVIMENTO_MOUSE * 8)) {
+      //printf("velocidade 2");
+      return 2; //velocidade media
+   } else {
+      //printf("velocidade 3");
+      return 3; //velocidade alta
+   }
+}
 
-        if (ie.type == EV_REL) {
-            if (ie.code == REL_X) { //horizontal
-                // if (ie.value > 0)  {
-                //     *x+=10;
-                // } else {
-                //     *x-=10;
-                // }
-                // *y=*y;
-                return 0;
-            } else if (ie.code == REL_Y) { //vertical
-                // if (ie.value > 0)  {
-                //     *y+=10;
-                // } else {
-                //     *y-=10;
-                // }
-                // *x=*x;
-                return 1;
-            }
-        }
+//8 cima, 2 baixo, 6 direita, 4 esquerda, 0 sem movimento
+int get_movimento_mouse(int fd, int *velocidade) {
+    int direcao, valor_x, valor_y;
+    direcao = le_mouse_valor(fd, &valor_x, &valor_y);
+
+    if ( (valor_x > FILTRO_MOVIMENTO_MOUSE) && (direcao == 6)) { //movimento no eixo x+
+        //printf("movimento x+\n");
+        *velocidade = define_velocidade_mouse(valor_x);
+        return 6; // x - direcao para direita
+    } else if ( (valor_y > FILTRO_MOVIMENTO_MOUSE) && (direcao == 2)) { //movimento no eixo y- 
+        //printf("movimento y-\n");
+        *velocidade = define_velocidade_mouse(valor_y);
+        return 2; //y - direcao para baixo 
+    } else if ( (valor_x < -FILTRO_MOVIMENTO_MOUSE) && (direcao == 4)) { //movimento no eixo x-
+        //printf("movimento x-\n");
+        *velocidade = define_velocidade_mouse(-valor_x);
+        return 4; // x - direcao para esquerda
+
+    } else if ( (valor_y < -FILTRO_MOVIMENTO_MOUSE) && (direcao == 8)) { //movimento no eixo y+
+        //printf("movimento y+\n");
+        *velocidade = define_velocidade_mouse(-valor_y);
+        return 8; // y - direcao para cima
     }
+    //printf("sem movimento\n");
+    return 0; //sem movimento   
 }
 
 int teste_leitura(int fd) {
@@ -119,22 +129,3 @@ int teste() {
     close(fd);
     return 0;
 }
-
-// int main() {
-//     int fd = abre_mouse();
-//     if (fd != -1) {
-//         le_mouse(fd);
-//         close(fd);
-//     }
-    
-//     return 0;
-// }
-
-/*
-struct input_event {
-struct timeval time;
-__u16 type;
-__u16 code;
-__s32 value;
-};
-*/
