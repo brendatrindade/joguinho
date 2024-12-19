@@ -2,9 +2,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
-#include "sprite.c"
+#include "proc_grafico.h"
 
-int usleep(useconds_t usec);
+extern void exibe_sprite(uint8_t sp, uint32_t xy, uint16_t offset, uint8_t registrador);
+extern void altera_pixel_sprite(uint16_t cor, uint16_t endereco);
+
+#define largura_sprite 20
+#define altura_sprite 20
+
+uint16_t converte_em_bgr(uint8_t rgb);
+void cria_sprite(uint16_t end_base, uint16_t dados_do_sprite[altura_sprite][largura_sprite]);
+
 void gera_sprite_estrela_offset8();
 void gera_sprite_estrela_offset9();
 void gera_sprite_estrela_offset10();
@@ -110,7 +118,7 @@ void gera_sprite_estrela_offset9(){
     int y, x;
     for ( y = 0; y < altura_sprite; y++) {
         for ( x = 0; x < largura_sprite; x++) {
-            cor_temp = dados_da_imagem_1[y][x];
+            cor_temp = dados_da_imagem_2[y][x];
             if (cor_temp == 0x00){
                 dados_do_sprite[y][x] = APAGA;
             } else {
@@ -129,7 +137,7 @@ void gera_sprite_estrela_offset10(){
     int y, x;
     for ( y = 0; y < altura_sprite; y++) {
         for ( x = 0; x < largura_sprite; x++) {
-            cor_temp = dados_da_imagem_1[y][x];
+            cor_temp = dados_da_imagem_3[y][x];
             if (cor_temp == 0xff){
                 dados_do_sprite[y][x] = APAGA;
             } else {
