@@ -3,14 +3,18 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
-#include "sprite.c"
 
 extern void inicializa_fpga();
 extern void fecha_dev_mem();
 extern void exibe_sprite(uint8_t sp, uint32_t xy, uint16_t offset, uint8_t registrador);
 extern void altera_pixel_sprite(uint16_t cor, uint16_t endereco);
 
-int usleep(useconds_t usec);
+#define largura_sprite 20
+#define altura_sprite 20
+
+uint16_t converte_em_bgr(uint8_t rgb);
+void cria_sprite(uint16_t end_base, uint16_t dados_do_sprite[altura_sprite][largura_sprite]);
+
 void gera_sprite_explo_ofst11();
 void gera_sprite_explo_ofst12();
 void gera_sprite_explo_ofst13();
@@ -89,25 +93,6 @@ uint16_t dados_da_imagem_3[altura_sprite][largura_sprite] = {
 { 0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xc0,0xc0,0x00,0x00,0x00,0x00,0xc0,0x00,0x00,0x00,0x00 }
 };
 
-//Cria e armazena um sprite na memoria de sprites
-void cria_sprite(uint16_t end_base, uint16_t dados_do_sprite[altura_sprite][largura_sprite]) {
-    uint16_t cor[400]; //20x20 -> 400 pixels por sprite
-    int y, x;
-    int z = 0;
-    for ( y = 0; y < altura_sprite; y++) {
-        for ( x = 0; x < largura_sprite; x++) {
-            cor[z] = dados_do_sprite[y][x]; //Extrai a cor de cada pixel em 9 bits BGR
-            z++;
-        }
-    }
-    //Escreve cada pixel da matriz 20x20 na memoria de sprites
-    int i = 0;
-    while (i < 400){
-        altera_pixel_sprite(cor[i], end_base + i);
-        i++;
-        usleep(10000);
-    }
-}
 
 void gera_sprite_explo_ofst11(){
     //Dados para formar um sprite 20x20 em formato RRR GGG BBB - 9 bits
@@ -160,7 +145,6 @@ void gera_sprite_explo_ofst13(){
             } else {
                 dados_do_sprite[y][x] = converte_em_bgr(dados_da_imagem_3[y][x]);//Converte pixel por pixel do formato RGB para o BGR
             }
-            dados_do_sprite[y][x] = converte_em_bgr(dados_da_imagem_3[y][x]);//Converte pixel por pixel do formato RGB para o BGR
         }
     }
     //Escreve os dados de cada pixel na memoria de sprites. [end_base = offset * 400]
