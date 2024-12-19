@@ -245,8 +245,7 @@ void *move_acelerometro() {
             }
         }
         if (colidiu == 4){
-            printf("Portal, player 1 ganhou o jogo!");
-            animacao_menu_win(); //Portal, ganhou o jogo!
+            animacao_menu_win_1(); //Portal, p1 ganhou o jogo!
         }
         p1_acelerometro.pos_xy_20b = (pos_x << 10 | pos_y);
 
@@ -306,6 +305,9 @@ void *move_mouse() {
             if( !colidiu ){ //sem parede, pode mover
                 pos_x = prox_pos_x; 
             }
+        }
+        if (colidiu == 4){
+            animacao_menu_win_2(); //Portal, p2 ganhou o jogo!
         }
 
         p2_mouse.pos_xy_20b = (pos_x << 10 | pos_y);
@@ -448,6 +450,15 @@ void *portal() {
         srand((unsigned)time(NULL));  // Inicializa o gerador de números aleatórios
         pos_x_portal = (rand() % 640) + 1;  
         pos_y_portal = (rand() % 480) + 1; 
+
+        //posiciona o portal longe das posicoes iniciais
+        if (pos_x_portal > 540 && pos_y_portal > 380){
+            pos_x_portal -= 100;
+            pos_y_portal -= 100;
+        } else if (pos_x_portal < 140 && pos_y_portal < 180){
+            pos_x_portal += 100;
+            pos_y_portal += 100;
+        }
 
         colidiu = colide(pos_x_portal, pos_y_portal); 
         
