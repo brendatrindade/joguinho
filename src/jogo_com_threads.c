@@ -10,6 +10,7 @@
 #include "colisao.c"
 #include "sprite.c"
 #include "animacao_menu.c"
+#include "animacao_win.c"
 
 extern void fecha_dev_mem();
 extern void inicializa_fpga();
@@ -43,8 +44,24 @@ typedef struct {
     int ativo;
 } Dados_jogador;
 
+// Dados do elemento passivo 1
+typedef struct {
+    uint32_t pos_xy_20b;
+    pthread_mutex_t mutex;
+    int ativo;
+} Dados_Estrela;
+
+// Dados do elemento passivo 2
+typedef struct {
+    uint32_t pos_xy_20b;
+    pthread_mutex_t mutex;
+    int ativo;
+} Dados_Portal;
+
 Dados_jogador p1_acelerometro;
 Dados_jogador p2_mouse;
+Dados_Estrela p_estrela;
+Dados_Portal p_portal;
 
 void inicializaLabirinto();
 void imprimeLabirintoTerminal();
@@ -158,7 +175,12 @@ int colide(uint16_t prox_pos_x, uint16_t prox_pos_y) {
                 return 1; //Tem parede
             } else if (labirinto[i][j] == 'F') {
                 return 2; //Saida Fechada
-            }
+            } else if (labirinto[i][j] == 'x') {
+                return 3; //Estrela
+            } else if (labirinto[i][j] == 'v') {
+                //printf("Portal, ganhou o jogo! - labirinto %d,%d = %c\n", i,j, labirinto[i][j]);
+                animacao_menu_win(); //Portal, ganhou o jogo!
+            }     
         }
     }
     //printf("Sem parede \n");
@@ -360,6 +382,95 @@ void apaga_sprite(){
     exibe_sprite(0, 0, 2, 2);
 }
 
+// ELEMENTO PASSIVO = SPRITE APARECENDO EM LUGARES ALEATÓRIOS
+void *elemento_passivo() {
+    uint16_t pos_x_passivo, pos_y_passivo;
+
+    //uint32_t xy_passivo;
+    uint32_t pas_xy_ant = (p_estrela.pos_xy_20b); // inicia com posicao anterior igual a posicao atual
+    int colidiu, i, j;
+
+    pos_x_passivo = (p_estrela.pos_xy_20b & mascara_10bits);
+    pos_y_passivo = ((p_estrela.pos_xy_20b >> 10) & mascara_10bits);
+
+    p_estrela.ativo = 1;
+
+    while(p_estrela.ativo) {
+        pthread_mutex_lock(&p_estrela.mutex);
+        
+        srand((unsigned)time(NULL));  // Inicializa o gerador de números aleatórios
+        pos_x_passivo = (rand() % 640) + 1;  
+        pos_y_passivo = (rand() % 480) + 1; 
+
+        colidiu = colide(pos_x_passivo, pos_y_passivo);
+        
+        if (!colidiu) {
+            converte_sprite_para_labirinto(pos_x_passivo, pos_y_passivo, &i, &j);
+            labirinto[i][j] == 'x';
+            
+            // apaga o sprite exibido na posicao anterior
+            exibe_sprite(0, pas_xy_ant, 9, 15);
+            //animacao_estrela(pas_xy_ant, 0);
+            pos_x_passivo &= mascara_10bits;
+            pos_y_passivo &= mascara_10bits;
+            p_estrela.pos_xy_20b = (pos_x_passivo << 10 | pos_y_passivo);
+        
+            // exibe o sprite na posicao atual
+            exibe_sprite(1, p_estrela.pos_xy_20b, 9, 15); // sp = 1 -> habilita sprite
+
+            //animacao_estrela( p_estrela.pos_xy_20b, 1);
+            pas_xy_ant = p_estrela.pos_xy_20b;
+        }
+        pthread_mutex_unlock(&p_estrela.mutex);
+        usleep(10000);
+    }
+}
+
+
+// ELEMENTO PASSIVO 2 = Portal
+void *portal() {
+    uint16_t pos_x_portal, pos_y_portal;
+
+    uint32_t pos_ant_portal = (p_portal.pos_xy_20b); // inicia com posicao anterior igual a posicao atual
+
+    int colidiu, i, j;
+
+    pos_x_portal = (p_portal.pos_xy_20b & mascara_10bits);
+    pos_y_portal = ((p_portal.pos_xy_20b >> 10) & mascara_10bits);
+
+    p_portal.ativo = 1;
+    
+    do {
+        srand((unsigned)time(NULL));  // Inicializa o gerador de números aleatórios
+        pos_x_portal = (rand() % 640) + 1;  
+        pos_y_portal = (rand() % 480) + 1; 
+
+        colidiu = colide(pos_x_portal, pos_y_portal); 
+        
+        if (!colidiu) {
+            converte_sprite_para_labirinto(pos_x_portal, pos_y_portal, &i, &j);
+            labirinto[i][j] == 'v';
+                
+            //apaga o sprite exibido na posicao anterior
+            //exibe_sprite(0, pos_ant_portal, 4, 16);
+            //animacao_portal(pos_ant_portal, 0);
+
+            pos_x_portal &= mascara_10bits;
+            pos_y_portal &= mascara_10bits;
+            p_portal.pos_xy_20b = (pos_x_portal << 10 | pos_y_portal);
+        
+            //exibe o sprite na posicao atual
+            //exibe_sprite(1, p_portal.pos_xy_20b, 4, 16);
+
+            animacao_portal( p_portal.pos_xy_20b, 1);
+            
+            pos_ant_portal = p_portal.pos_xy_20b;
+        }
+    } while ( colidiu );
+
+    while(p_portal.ativo) {}
+}
+
 int main(){
     inicializa_fpga();
     
@@ -368,6 +479,8 @@ int main(){
     // Inicializa mutexes
     pthread_mutex_init(&p1_acelerometro.mutex, NULL);
     pthread_mutex_init(&p2_mouse.mutex, NULL);
+    pthread_mutex_init(&p_estrela.mutex, NULL);
+    pthread_mutex_init(&p_portal.mutex, NULL);
 
     for (int i = 0; i < 50; i++) {
         apagaLabirinto();
@@ -389,6 +502,8 @@ int main(){
 
     configurar_acelerometro();
     grava_sprite_ovni();
+    grava_sprite_portal();
+    grava_sprite_estrela();
 
     animacao_menu();
 
@@ -403,7 +518,7 @@ int main(){
     }
 
     // Cria as threads
-    pthread_t thread_acel, thread_mouse;
+    pthread_t thread_acel, thread_mouse, thread_passiva, thread_portal;
     
     if (pthread_create(&thread_acel, NULL, move_acelerometro, NULL) != 0) {
         perror("Erro ao criar thread do acelerometro");
@@ -416,6 +531,21 @@ int main(){
         pthread_join(thread_acel, NULL);
         return 1;
     }
+
+    if (pthread_create(&thread_passiva, NULL, elemento_passivo, NULL) != 0) {
+        p1_acelerometro.ativo = 0;
+        p2_mouse.ativo = 0;
+        perror("Erro ao criar thread do elemento passivo");
+        return 1;
+    }
+
+    if (pthread_create(&thread_portal, NULL, portal, NULL) != 0) {
+        p1_acelerometro.ativo = 0;
+        p2_mouse.ativo = 0;
+        p_estrela.ativo = 0;
+        perror("Erro ao criar thread do elemento passivo");
+        return 1;
+    }
     
     while (1) {
         if (acess_btn() == 1) { // Encerra o jogo
@@ -425,14 +555,18 @@ int main(){
     
     p1_acelerometro.ativo = 0;
     p2_mouse.ativo = 0;
-    
+    p_estrela.ativo = 0;
+    p_portal.ativo = 0;
+
     // Espera as threads terminarem
     pthread_join(thread_acel, NULL);
     pthread_join(thread_mouse, NULL);
-    
+    pthread_join(thread_passiva, NULL);
+
     pthread_mutex_destroy(&p1_acelerometro.mutex);
     pthread_mutex_destroy(&p2_mouse.mutex);
-    
+    pthread_mutex_destroy(&p_estrela.mutex);
+
     desmapear_memoria();
     fecha_dev_mem();
     return 0;
