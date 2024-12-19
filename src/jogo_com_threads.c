@@ -6,10 +6,10 @@
 #include <pthread.h>
 #include "proc_grafico.h"
 #include "acelerometro.c"
-#include "mouse_thread.c"
+#include "mouse_thread.h"
 #include "colisao.c"
-#include "ovni.c"
-#include "animacao_portal.c"
+#include "sprite.c"
+#include "animacao_menu.c"
 
 extern void fecha_dev_mem();
 extern void inicializa_fpga();
@@ -20,15 +20,15 @@ extern void apaga_cor_bg(uint8_t registrador);
 extern void exibe_sprite(uint8_t sp, uint32_t xy, uint16_t offset, uint8_t registrador);
 extern int acess_btn();
 
-extern int abre_mouse();
-extern int le_mouse_orientacao(int fd);
-extern int le_mouse_direcao(int fd, uint16_t *x, uint16_t *y);
-extern int teste_leitura(int fd);
-
 #define ALTURA_LAB 60   // Altura do labirinto
 #define LARGURA_LAB 80  // Largura do labirinto
 #define ESPESSURA 4     // Espessura das paredes e caminhos
 #define mascara_10bits 0b1111111111
+
+extern int abre_mouse();
+extern int le_mouse_orientacao(int fd);
+extern int le_mouse_direcao(int fd, uint16_t *x, uint16_t *y);
+extern int teste_leitura(int fd);
 
 char labirinto[ALTURA_LAB][LARGURA_LAB];
 
@@ -46,7 +46,6 @@ typedef struct {
 Dados_jogador p1_acelerometro;
 Dados_jogador p2_mouse;
 
-int usleep(useconds_t usec);
 void inicializaLabirinto();
 void imprimeLabirintoTerminal();
 int validaPosicao(int x, int y);
@@ -231,9 +230,9 @@ void *move_acelerometro() {
 }
 
 void *move_mouse() {
-    int fd, direcao, orientacao, colidiu;
+    int fd, direcao, orientacao, colidiu, movimento;
     uint16_t pos_x, pos_y, prox_pos_y, prox_pos_x;
-
+    int velocidade = 1;  
     fd = abre_mouse();
     p2_mouse.ativo = 1;
 
@@ -246,8 +245,7 @@ void *move_mouse() {
         pos_x = (p2_mouse.pos_xy_20b >> 10) & mascara_10bits;
         pos_y = p2_mouse.pos_xy_20b & mascara_10bits;
 
-        direcao = le_mouse_direcao(fd, &pos_x, &pos_y); // 0 horizontal, 1 vertical
-        orientacao = le_mouse_orientacao(fd); //8 cima, 2 baixo, 6 direita, 4 esquerda, 0 sem movimento
+        direcao = get_movimento_mouse(fd, &velocidade); //8 cima, 2 baixo, 6 direita, 4 esquerda, 0 sem movimento
 
         //apaga o sprite exibido na posicao anterior
         exibe_sprite(0, pos_xy_20b_ant, 2, 2);//sp = 0 - desabilita sprite
@@ -256,26 +254,28 @@ void *move_mouse() {
         //exibe o sprite na posicao atual
         exibe_sprite(1, p2_mouse.pos_xy_20b, 2, 2);//sp = 1 - habilita sprite
 
-        if (orientacao == 8) { // cima
-            prox_pos_y = pos_y - 10;
+        movimento = 5*velocidade;
+
+        if (direcao == 8) { // cima
+            prox_pos_y = pos_y - movimento;
             colidiu = colide(pos_x, prox_pos_y);
             if( !colidiu ){ //sem parede, pode mover
                 pos_y = prox_pos_y;
             }
-        } else if (orientacao == 2) { // baixo
-            prox_pos_y = pos_y + 10;
+        } else if (direcao == 2) { // baixo
+            prox_pos_y = pos_y + movimento;
             colidiu = colide(pos_x, prox_pos_y);
             if( !colidiu ){ //sem parede, pode mover
                 pos_y = prox_pos_y;
             }            
-        } else if (orientacao == 6) { // direita
-            prox_pos_x = pos_x + 10;
+        } else if (direcao == 6) { // direita
+            prox_pos_x = pos_x + movimento;
             colidiu = colide(prox_pos_x, pos_y);
             if( !colidiu ){ //sem parede, pode mover
                 pos_x = prox_pos_x; 
             }
-        } else if (orientacao == 4) { // esquerda
-            prox_pos_x = pos_x - 10;
+        } else if (direcao == 4) { // esquerda
+            prox_pos_x = pos_x - movimento;
             colidiu = colide(prox_pos_x, pos_y);
             if( !colidiu ){ //sem parede, pode mover
                 pos_x = prox_pos_x; 
@@ -343,7 +343,7 @@ void posiciona_sprites(uint32_t *pos_xy_20b_p1, uint32_t *pos_xy_20b_p2){
                 *pos_xy_20b_p1 = (pos_x_p1 << 10 | pos_y_p1);
                 exibe_sprite(1, *pos_xy_20b_p1, 1, 1);
             }
-            else if(labirinto[i][j] == '2'){
+            if(labirinto[i][j] == '2'){
                 //printf("Sprite 2 - x lab: %d y lab: %d\n", i ,j);
                 converte_labirinto_para_sprite(i,j, &pos_x_p2, &pos_y_p2);
                 pos_x_p2 &= mascara_10bits;
@@ -355,8 +355,15 @@ void posiciona_sprites(uint32_t *pos_xy_20b_p1, uint32_t *pos_xy_20b_p2){
     }
 }
 
+void apaga_sprite(){
+    exibe_sprite(0, 0, 1, 1);
+    exibe_sprite(0, 0, 2, 2);
+}
+
 int main(){
     inicializa_fpga();
+    
+    apaga_sprite();
 
     // Inicializa mutexes
     pthread_mutex_init(&p1_acelerometro.mutex, NULL);
@@ -374,10 +381,8 @@ int main(){
 
     // Coloca as saidas
     def_saidas_labirinto();
-
     // Posiciona o p1 e p2
     def_posicao_jogadores();
-
     def_borda_labirinto();
 
     //imprimeLabirintoTerminal();
@@ -385,11 +390,17 @@ int main(){
     configurar_acelerometro();
     grava_sprite_ovni();
 
-    for (int i = 0; i < 1200; i++) {
-        imprimeLabirintoVGA();
+    animacao_menu();
+
+    for (int i = 0; i < 50; i++) {
+        apagaLabirinto();
     }
 
     posiciona_sprites(&p1_acelerometro.pos_xy_20b, &p2_mouse.pos_xy_20b);
+
+    for (int i = 0; i < 1200; i++) {
+        imprimeLabirintoVGA();
+    }
 
     // Cria as threads
     pthread_t thread_acel, thread_mouse;
@@ -410,7 +421,6 @@ int main(){
         if (acess_btn() == 1) { // Encerra o jogo
             break;
         }
-        usleep(100000);
     }
     
     p1_acelerometro.ativo = 0;
