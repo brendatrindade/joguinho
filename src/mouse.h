@@ -6,6 +6,7 @@
 Abre o driver do mouse em modo leitura.
 Retorno: O caminho do driver do mouse. Caso ocorra algum erro, retorna -1.
 */
+
 int abre_mouse();
 
 int le_mouse_orientacao(int fd);
