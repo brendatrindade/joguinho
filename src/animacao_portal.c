@@ -1,21 +1,25 @@
-#include "proc_grafico.h" //retirar
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
-#include "sprite.c"
+#include "proc_grafico.h"
 
-extern void inicializa_fpga(); //retirar
-extern void fecha_dev_mem(); //retirar
+extern void exibe_sprite(uint8_t sp, uint32_t xy, uint16_t offset, uint8_t registrador);
+extern void altera_pixel_sprite(uint16_t cor, uint16_t endereco);
 
-int usleep(useconds_t usec);
+#define largura_sprite 20
+#define altura_sprite 20
+
+uint16_t converte_em_bgr(uint8_t rgb);
+void cria_sprite(uint16_t end_base, uint16_t dados_do_sprite[altura_sprite][largura_sprite]);
+
 void gera_sprite_portal_ofst4();
 void gera_sprite_portal_ofst5();
 void gera_sprite_portal_ofst6();
 void gera_sprite_portal_ofst7();
 void grava_sprite_portal();
 void animacao_portal(uint32_t pos_xy_20b, int sp);
-int main();
+//int main();
 
 //Dados da imagem para formar um sprite (20x20) em formato RRRGGGBB - 1 byte por pixel
 uint16_t dados_da_imagem_1[altura_sprite][largura_sprite] = {
@@ -113,7 +117,6 @@ uint16_t dados_da_imagem_4[altura_sprite][largura_sprite] = {
 { 0xff,0xff,0xff,0xff,0x25,0x25,0x25,0x29,0x29,0x29,0x29,0x29,0x29,0x29,0x29,0x29,0xff,0xff,0xff,0xff }
 };
 
-
 void gera_sprite_portal_ofst4(){
     //Dados para formar um sprite 20x20 em formato RRR GGG BBB - 9 bits
     uint16_t dados_do_sprite[altura_sprite][largura_sprite];
@@ -165,7 +168,6 @@ void gera_sprite_portal_ofst6(){
             } else {
                 dados_do_sprite[y][x] = converte_em_bgr(dados_da_imagem_3[y][x]);//Converte pixel por pixel do formato RGB para o BGR
             }
-            dados_do_sprite[y][x] = converte_em_bgr(dados_da_imagem_3[y][x]);//Converte pixel por pixel do formato RGB para o BGR
         }
     }
     //Escreve os dados de cada pixel na memoria de sprites. [end_base = offset * 400]
@@ -179,13 +181,12 @@ void gera_sprite_portal_ofst7(){
     int y, x;
     for ( y = 0; y < altura_sprite; y++) {
         for ( x = 0; x < largura_sprite; x++) {
-            cor_temp = dados_da_imagem_3[y][x];
+            cor_temp = dados_da_imagem_4[y][x];
             if (cor_temp == 0xff){
                 dados_do_sprite[y][x] = APAGA;
             } else {
                 dados_do_sprite[y][x] = converte_em_bgr(dados_da_imagem_4[y][x]);//Converte pixel por pixel do formato RGB para o BGR
             }
-            dados_do_sprite[y][x] = converte_em_bgr(dados_da_imagem_4[y][x]);//Converte pixel por pixel do formato RGB para o BGR
         }
     }
     //Escreve os dados de cada pixel na memoria de sprites. [end_base = offset * 400]
@@ -209,6 +210,7 @@ void animacao_portal(uint32_t pos_xy_20b, int sp){
     }
 }
 
+/*
 int main() {
     inicializa_fpga();
 
@@ -229,8 +231,8 @@ int main() {
     uint32_t pos_xy_20b;
     pos_xy_20b = (pos_x << 10 | pos_y);
 
-    animacao(pos_xy_20b, 1);
+    animacao_portal(pos_xy_20b, 1);
 
     fecha_dev_mem();   
     return 0;
-}
+}*/
