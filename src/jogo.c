@@ -7,8 +7,7 @@
 #include "acelerometro.c"
 #include "mouse.h"
 #include "colisao.c"
-#include "ovni.c"
-#include "animacao_portal.c"
+#include "sprite.c"
 
 extern void fecha_dev_mem();
 extern void inicializa_fpga();
@@ -35,7 +34,7 @@ char labirinto[ALTURA_LAB][LARGURA_LAB];
 int dx[] = {0, 0, -1, 1};
 int dy[] = {-1, 1, 0, 0};
 
-int usleep(useconds_t usec);
+//int usleep(__useconds_t usec);
 void inicializaLabirinto();
 void imprimeLabirintoTerminal();
 int validaPosicao(int x, int y);
@@ -44,7 +43,7 @@ void imprimeLabirintoVGA();
 void apagaLabirinto();
 int colide(uint16_t prox_pos_x, uint16_t prox_pos_y);
 void colisao_labirinto_acel(uint32_t pos_xy_20b_p1);
-void button();
+int button();
 void def_saidas_labirinto();
 void def_posicao_jogadores();
 void def_borda_labirinto();
@@ -211,12 +210,12 @@ void colisao_labirinto_acel(uint32_t pos_xy_20b_p1) {
             }
         }
         pos_xy_20b_p1 = (pos_x << 10 | pos_y);
-        sleep(0.01);
-        // usleep(10000);
+        //sleep(0.01);
+        usleep(10000);
     }
 }
 
-void button() {
+int button() {
   int btn;
   while(1) {
     btn = acess_btn();
@@ -314,13 +313,7 @@ int main(){
     }
 
     srand(time(NULL)); // Semente para números aleatórios
-
-    int btn = button();
-    while(btn == 5){
-        btn = button();
-    }
-    printf("Botão apertado e jogo inicializado com sucesso!\n");
-
+    
     inicializaLabirinto();
 
     geraLabirinto(ESPESSURA, ESPESSURA);
@@ -338,11 +331,11 @@ int main(){
     configurar_acelerometro();
     grava_sprite_ovni();
 
+    posiciona_sprites(&pos_xy_20b_p1, &pos_xy_20b_p2);
+
     for (int i = 0; i < 1200; i++) {
         imprimeLabirintoVGA();
     }
-
-    posiciona_sprites(&pos_xy_20b_p1, &pos_xy_20b_p2);
 
     colisao_labirinto_acel(pos_xy_20b_p1);
 
