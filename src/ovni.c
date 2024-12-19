@@ -2,7 +2,16 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
-#include "sprite.c"
+#include "proc_grafico.h"
+
+extern void exibe_sprite(uint8_t sp, uint32_t xy, uint16_t offset, uint8_t registrador);
+extern void altera_pixel_sprite(uint16_t cor, uint16_t endereco);
+
+#define largura_sprite 20
+#define altura_sprite 20
+
+uint16_t converte_em_bgr(uint8_t rgb);
+void cria_sprite(uint16_t end_base, uint16_t dados_do_sprite[altura_sprite][largura_sprite]);
 
 void gera_sprite_ovni_offset1();
 void gera_sprite_ovni_offset2();
@@ -143,3 +152,5 @@ void grava_sprite_ovni(){
     gera_sprite_ovni_offset2();
     gera_sprite_ovni_offset3();
 }
+
+
