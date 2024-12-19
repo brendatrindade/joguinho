@@ -178,8 +178,8 @@ int colide(uint16_t prox_pos_x, uint16_t prox_pos_y) {
             } else if (labirinto[i][j] == 'x') {
                 return 3; //Estrela
             } else if (labirinto[i][j] == 'v') {
+                return 4;
                 //printf("Portal, ganhou o jogo! - labirinto %d,%d = %c\n", i,j, labirinto[i][j]);
-                animacao_menu_win(); //Portal, ganhou o jogo!
             }     
         }
     }
@@ -243,6 +243,10 @@ void *move_acelerometro() {
             if( !colidiu ){ //sem parede, pode mover
                 pos_x = prox_pos_x; 
             }
+        }
+        if (colidiu == 4){
+            printf("Portal, player 1 ganhou o jogo!");
+            animacao_menu_win(); //Portal, ganhou o jogo!
         }
         p1_acelerometro.pos_xy_20b = (pos_x << 10 | pos_y);
 
@@ -430,7 +434,6 @@ void *elemento_passivo() {
 // ELEMENTO PASSIVO 2 = Portal
 void *portal() {
     uint16_t pos_x_portal, pos_y_portal;
-
     uint32_t pos_ant_portal = (p_portal.pos_xy_20b); // inicia com posicao anterior igual a posicao atual
 
     int colidiu, i, j;
@@ -440,6 +443,7 @@ void *portal() {
 
     p_portal.ativo = 1;
     
+    pthread_mutex_lock(&p_portal.mutex);
     do {
         srand((unsigned)time(NULL));  // Inicializa o gerador de números aleatórios
         pos_x_portal = (rand() % 640) + 1;  
@@ -467,7 +471,7 @@ void *portal() {
             pos_ant_portal = p_portal.pos_xy_20b;
         }
     } while ( colidiu );
-
+    pthread_mutex_unlock(&p_estrela.mutex);
     while(p_portal.ativo) {}
 }
 
