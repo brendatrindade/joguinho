@@ -46,7 +46,6 @@ int mg_por_lsb = 2; //mg por bit menos significativo para conversão
 int16_t offset_x, offset_y; //offset dos eixos X, Y e Z para calibracao
 int fd;
 
-int usleep(useconds_t usec);
 void escrever_registrador(uint32_t endereco, uint32_t valor);
 uint32_t ler_registrador(uint32_t endereco);
 void inicializar_i2c();
