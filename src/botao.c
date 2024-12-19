@@ -7,7 +7,6 @@
 #include <unistd.h>
 #include <stdint.h>
 
-
 extern void fecha_dev_mem();
 extern void inicializa_fpga();
 extern void escreve_bloco(uint16_t posicao, uint16_t cor);
@@ -17,21 +16,17 @@ extern void apaga_cor_bg(uint8_t registrador);
 extern void exibe_sprite(uint8_t sp, uint32_t xy, uint16_t offset, uint8_t registrador);
 extern int acess_btn();
 
-
 extern int abre_mouse();
 extern int le_mouse_orientacao(int fd);
 extern int le_mouse_direcao(int fd, uint16_t *x, uint16_t *y);
 extern int teste_leitura(int fd);
-
 
 #define LARGURA 80 // Largura do labirinto (deve ser ímpar)
 #define ALTURA 60  // Altura do labirinto (deve ser ímpar)
 #define ESPESSURA 4 // Espessura das paredes e caminhos
 #define BUTTON 0
 
-
 char labirinto[ALTURA][LARGURA];
-
 
 void inicializaLabirinto();
 void imprimeLabirinto();
@@ -47,7 +42,6 @@ int main();
 int dx[] = {0, 0, -1, 1};
 int dy[] = {-1, 1, 0, 0};
 
-
 // Função para inicializar o labirinto com paredes
 void inicializaLabirinto() {
     for (int i = 0; i < ALTURA; i++) {
@@ -56,7 +50,6 @@ void inicializaLabirinto() {
         }
     }
 }
-
 
 // Função para imprimir o labirinto
 void imprimeLabirintoTerminal() {
@@ -68,9 +61,6 @@ void imprimeLabirintoTerminal() {
     }
 }
 
-
-
-
 // Função recursiva para gerar o labirinto
 void geraLabirinto(int x, int y) {
     for (int i = 0; i < ESPESSURA; i++) {
@@ -78,7 +68,6 @@ void geraLabirinto(int x, int y) {
             labirinto[x + i][y + j] = ' '; // Marca como espaço
         }
     }
-
 
     // Embaralhar as direções
     int direcoes[] = {0, 1, 2, 3};
@@ -89,12 +78,10 @@ void geraLabirinto(int x, int y) {
         direcoes[r] = temp;
     }
 
-
     // Tentar cada direção
     for (int i = 0; i < 4; i++) {
         int nx = x + dx[direcoes[i]] * ESPESSURA * 2;
         int ny = y + dy[direcoes[i]] * ESPESSURA * 2;
-
 
         if (validaPosicao(nx, ny)) {
             for (int j = 1; j < ESPESSURA * 2; j++) {
@@ -115,11 +102,8 @@ int validaPosicao(int x, int y) {
     return labirinto[x][y] == '#'; // Cavar apenas se a posição for parede
 }
 
-
-
 void imprimeLabirintoVGA() {
     altera_cor_bg(BRANCO, 0); //pintando fundo
-
 
     int i, j;
     for(i=0;i < ALTURA;i++) { //linhas
@@ -133,20 +117,15 @@ void imprimeLabirintoVGA() {
     }
 }
 
-
 void apagaLabirinto() {
     apaga_cor_bg(0);
     int i, j;
     for(i=0;i < ALTURA;i++) { //linhas
         for(j=0; j < LARGURA; j++) { //colunas
-                apaga_bloco( j + (i * 80));
-           
+            apaga_bloco( j + (i * 80));
         }
     }
 }
-
-
-
 
 void configuracoesGerais() {
     inicializa_fpga();
@@ -154,7 +133,6 @@ void configuracoesGerais() {
     inicializaLabirinto();
     geraLabirinto(ESPESSURA, ESPESSURA);
 }
-
 
 void button() {
   int btn;
@@ -181,7 +159,6 @@ void buttonTeste(){
     }
 }
 
-
 int main() {
     configuracoesGerais();
 
@@ -190,7 +167,6 @@ int main() {
         //imprimeLabirintoVGA();
         apagaLabirinto();
     }
-
 
     desmapear_memoria();
     fecha_dev_mem();
