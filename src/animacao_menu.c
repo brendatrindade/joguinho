@@ -7,17 +7,18 @@
 extern void inicializa_fpga();
 extern void fecha_dev_mem();
 extern void escreve_bloco(uint16_t posicao, uint16_t cor);
+extern int acess_btn();
 
 #define altura_menu 60
 #define largura_menu 80
 
-int usleep(useconds_t usec);
 uint16_t converte_em_bgr(uint8_t rgb);
 void cria_menu0(uint16_t dados_do_menu0[altura_menu][largura_menu]);
 void cria_menu1(uint16_t dados_do_menu1[altura_menu][largura_menu]);
 void apaga_menu();
 void animacao_menu();
 int main();
+int button();
 
 //Dados da imagem para formar um menu (60x80) em formato RRRGGGBB - 1 byte por pixel
 uint16_t dados_do_menu0[altura_menu][largura_menu] = {
@@ -147,23 +148,6 @@ uint16_t dados_do_menu1[altura_menu][largura_menu] = {
 { 0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02,0x02 }
 };
 
-//Converte os dados da imagem de RGB para BGR 9 bits - formato da instrucao wsm
-uint16_t converte_em_bgr(uint8_t rgb) {
-    uint8_t r, g, b;
-    uint16_t bgr;
-
-    //Extrai cada tom (R, G e B) do formato RGB
-    r = (rgb >> 5) & 0b111; // 3 bits msb do vermelho
-    g = (rgb >> 2) & 0b111; // 3 bits do meio do verde
-    b = rgb & 0b11; // 2 bits lsb do azul
-    //ajusta o azul de 2 para 3 bits
-    b = b << 1;
-
-    //Coloca no formato BBB GGG RRR de 9 bits
-    bgr = ( (b << 6) | (g << 3) | r );
-
-    return bgr;
-}
 
 //Cria e armazena um sprite na memoria de sprites
 void cria_menu0(uint16_t dados_do_menu0[altura_menu][largura_menu]) {
@@ -211,36 +195,68 @@ void cria_menu1(uint16_t dados_do_menu1[altura_menu][largura_menu]) {
 
 //Cria e armazena um sprite na memoria de sprites
 void apaga_menu() {
-    int i, j;
+    int i, j, k;
 
-    //Escreve cada pixel da matriz no VGA
-    for ( i = 0; i < altura_menu; i++) {
-        for ( j = 0; j < largura_menu; j++) {
-        escreve_bloco((j + (i * 80)), APAGA);
+    for ( k = 0; k < 100; k++) {
+        //Escreve cada pixel da matriz no VGA
+        for ( i = 0; i < altura_menu; i++) {
+            for ( j = 0; j < largura_menu; j++) {
+            escreve_bloco((j + (i * 80)), APAGA);
+            }
         }
     }
 }
 
 void animacao_menu(){    
-    while (1) {    
+    int btn = button();
+    while (btn == 5) {        
+        btn = button();
         int i;
         for (i=0; i<50; i++){
             cria_menu0(dados_do_menu0);
         }
+        btn = button();
         usleep(100000);
         for (i=0; i<50; i++){
             cria_menu1(dados_do_menu1);
         }
+        btn = button();
         usleep(100000);
     }
 }
 
-int main(){
-    inicializa_fpga();
-
-    animacao_menu();
-
-    fecha_dev_mem();
-
-    return 0;
+int button() {
+  int btn;
+    btn = acess_btn();
+    printf("%d\n", btn);
+    if(btn == 15){
+        //printf("Não esta apertando nenhum botão \n");
+        return 5;
+    } else if( btn == 14) { 
+        //printf("Print botão: 0 \n");
+        return 0;
+    } else if(btn == 13) { 
+        //printf("Print botão: 1 \n");
+        return 1;
+    } else if (btn == 11) { 
+        //printf("Print botão: 2 \n"); 
+        return 2;
+    } else if (btn == 7) {
+        //printf("Print botão: 3 \n");
+        return 3;
+    } else {
+        printf("cai aq");
+    }
 }
+
+// int main(){
+//     inicializa_fpga();
+
+//     //animacao_menu();
+
+//     apaga_menu();
+
+//     fecha_dev_mem();
+
+//     return 0;
+// }
