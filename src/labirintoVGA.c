@@ -27,7 +27,6 @@ extern int teste_leitura(int fd);
 
 char labirinto[ALTURA][LARGURA];
 
-int usleep(useconds_t usec);
 void inicializaLabirinto();
 void imprimeLabirinto();
 int validaPosicao(int x, int y);
@@ -222,8 +221,8 @@ int button() {
     case 0b1011:
         return 3;  // Botão 3
     default:
-        return 0; //não apertou nenhum botão
-    }
+        return 0; //não apertou nenhum botão
+    }
 }
 
 
