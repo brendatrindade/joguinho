@@ -91,7 +91,6 @@ void inicializaLabirinto() {
     }
 }
 
-
 // Função para verificar se a posição é válida e se pode ser cavada
 int validaPosicao(int x, int y) {
     if (x < ESPESSURA || y < ESPESSURA || x >= ALTURA_LAB - ESPESSURA || y >= LARGURA_LAB - ESPESSURA) {
@@ -108,7 +107,6 @@ void geraLabirinto(int x, int y) {
             labirinto[x + i][y + j] = ' '; // Marca como espaço
         }
     }
-
     // Embaralhar as direções
     int direcoes[] = {0, 1, 2, 3};
     for (int i = 0; i < 4; i++) {
@@ -117,7 +115,6 @@ void geraLabirinto(int x, int y) {
         direcoes[i] = direcoes[r];
         direcoes[r] = temp;
     }
-
     // Tentar cada direção
     for (int i = 0; i < 4; i++) {
         int nx = x + dx[direcoes[i]] * ESPESSURA * 2;
@@ -134,7 +131,6 @@ void geraLabirinto(int x, int y) {
     }
 }
 
-
 void imprimeLabirintoVGA() {
     altera_cor_bg(BRANCO, 0); //pintando fundo
     int i, j;
@@ -149,7 +145,6 @@ void imprimeLabirintoVGA() {
     }
 }
 
-
 void apagaLabirinto() {
     apaga_cor_bg(0);
     int i, j;
@@ -162,10 +157,10 @@ void apagaLabirinto() {
 
 // Apaga todos os sprites da tela.
 void apaga_sprite(){
-    exibe_sprite(0, 0, 1, 1);
-    exibe_sprite(0, 0, 2, 2);
-    exibe_sprite(0, 0, 4, 10);
-    exibe_sprite(0, 0, 9, 15);
+    int i;
+    for (i=1; i<25; i++){
+        exibe_sprite(0, 0, 1, i);
+    }
 }
 
 //Verifica inicio e fim do sprite
@@ -176,7 +171,6 @@ int colide(uint16_t prox_pos_x, uint16_t prox_pos_y) {
     for( q= 0; q < 2; q++) {
         for( w = 0; w < 2; w++) {
             converte_sprite_para_labirinto(verifica_x[q], verifica_y[w], &i, &j);
-            printf("lab = %c\n", labirinto[i][j]);
             if (labirinto[i][j] == '#') {
                 return 1; //Tem parede
             } else if (labirinto[i][j] == 'F') {
@@ -185,12 +179,13 @@ int colide(uint16_t prox_pos_x, uint16_t prox_pos_y) {
                 return 3; //Estrela
             } else if (labirinto[i][j] == 'v') {
                 return 4;
-            }     
+            } else if (labirinto[i][j] == 'K') {
+                return 5;
+            } 
         }
     }
     return 0;
 }
-
 
 void *move_acelerometro() {
     int direcao_sprite, movimento, colidiu;
@@ -504,16 +499,12 @@ void *elemento_passivo() {
 
             labirinto[i][j] = 'x';
             
-            //animacao_estrela(pas_xy_ant, 0);
             pos_x_passivo &= mascara_10bits;
             pos_y_passivo &= mascara_10bits;
             p_estrela.pos_xy_20b = (pos_x_passivo << 10 | pos_y_passivo);
         
             // exibe o sprite na posicao atual
             exibe_sprite(1, p_estrela.pos_xy_20b, 9, 15);
-
-            //animacao_estrela( p_estrela.pos_xy_20b, 1);
-            //pas_xy_ant = p_estrela.pos_xy_20b;
         }
         pthread_mutex_unlock(&p_estrela.mutex);
         usleep(1000);
@@ -554,24 +545,16 @@ void *portal() {
             converte_sprite_para_labirinto(pos_x_portal, pos_y_portal, &i, &j);
             labirinto[i][j] = 'v';
                 
-            //apaga o sprite exibido na posicao anterior
-            //exibe_sprite(0, pos_ant_portal, 4, 16);
-            //animacao_portal(pos_ant_portal, 0);
-
             pos_x_portal &= mascara_10bits;
             pos_y_portal &= mascara_10bits;
             p_portal.pos_xy_20b = (pos_x_portal << 10 | pos_y_portal);
         
-            //exibe o sprite na posicao atual
-            //exibe_sprite(1, p_portal.pos_xy_20b, 4, 16);
-
             animacao_portal( p_portal.pos_xy_20b, 1);
             
             pos_ant_portal = p_portal.pos_xy_20b;
         }
     } while ( colidiu );
     pthread_mutex_unlock(&p_estrela.mutex);
-    //while(p_portal.ativo) {}
 }
 
 int main(){
