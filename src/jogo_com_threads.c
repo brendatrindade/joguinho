@@ -183,7 +183,7 @@ int colide(uint16_t prox_pos_x, uint16_t prox_pos_y) {
             } 
         }
     }
-    return 0;
+    return 0; //Sem colisao
 }
 
 void *move_acelerometro() {
@@ -570,10 +570,12 @@ int main(){
     inicializa_fpga();
 
     apaga_sprite();
-        
-    grava_sprite_ovni();
-    grava_sprite_portal();
-    grava_sprite_estrela();
+
+    for (int i = 0; i < 50; i++) {
+        grava_sprite_ovni();
+        grava_sprite_portal();
+        grava_sprite_estrela();
+    }
 
     posiciona_sprites(&p1_acelerometro.pos_xy_20b, &p2_mouse.pos_xy_20b);
 
