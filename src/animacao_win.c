@@ -8,6 +8,7 @@ extern void escreve_bloco(uint16_t posicao, uint16_t cor);
 
 #define altura_menu 60
 #define largura_menu 80
+#define mascara_9bits 0b111111111
 
 uint16_t converte_em_bgr(uint8_t rgb);
 void cria_menu_win(uint16_t dados_do_menu0[altura_menu][largura_menu]);
@@ -374,30 +375,57 @@ void animacao_menu_win(){
     }
 }
 
+void imprime_poligono(uint32_t *pos_xy_18, uint32_t *pos_xy2_18){
+    uint16_t pos_x_p1, pos_y_p1, pos_x_p2, pos_y_p2;
+
+    converte_labirinto_para_sprite(1, 1, &pos_x_p1, &pos_y_p1);
+    pos_x_p1 &= mascara_9bits;
+    pos_y_p1 &= mascara_9bits;
+    *pos_xy_18 = (pos_x_p1 << 9 | pos_y_p1);   
+    desenha_poligono(ROXO_ESCURO, 1, 1, *pos_xy_18);
+
+    converte_labirinto_para_sprite(5, 1, &pos_x_p2, &pos_y_p2);
+    pos_x_p2 &= mascara_9bits;
+    pos_y_p2 &= mascara_9bits;
+    *pos_xy2_18 = (pos_x_p1 << 9 | pos_y_p1);   
+    desenha_poligono(ROXO_ESCURO, 1, 2, *pos_xy2_18);
+}
+
+void apaga_poligono(uint32_t *pos_xy_18, uint32_t *pos_xy2_18){
+    desenha_poligono(APAGA, 1, 1, *pos_xy_18);             
+    desenha_poligono(APAGA, 1, 2, *pos_xy2_18);
+}
+
 void animacao_menu_win_1(){
+    uint32_t pos_xy_18, pos_xy2_18;
     int i;    
     while (1) {        
         for (i=0; i<50; i++){
             cria_menu_win(dados_do_menu_win1);
         }
         usleep(100000);
+        imprime_poligono(&pos_xy_18, &pos_xy2_18);
         for (i=0; i<50; i++){
             cria_menu_win(dados_do_menu_win1_2);
         }
+        apaga_poligono(&pos_xy_18, &pos_xy2_18);
         usleep(100000);
     }
 }
 
 void animacao_menu_win_2(){
+    uint32_t pos_xy_18, pos_xy2_18;
     int i;    
     while (1) {        
         for (i=0; i<50; i++){
             cria_menu_win(dados_do_menu_win2);
         }
         usleep(100000);
+        imprime_poligono(&pos_xy_18, &pos_xy2_18);
         for (i=0; i<50; i++){
             cria_menu_win(dados_do_menu_win2_1);
         }
+        apaga_poligono(&pos_xy_18, &pos_xy2_18);
         usleep(100000);
     }
 }

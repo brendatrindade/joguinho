@@ -25,7 +25,6 @@ extern int acess_btn();
 #define LARGURA_LAB 80  // Largura do labirinto
 #define ESPESSURA 4     // Espessura das paredes e caminhos
 #define mascara_10bits 0b1111111111
-#define mascara_9bits 0b111111111
 
 extern int abre_mouse();
 extern int le_mouse_orientacao(int fd);
@@ -509,7 +508,6 @@ void *elemento_passivo() {
         pthread_mutex_unlock(&p_estrela.mutex);
     }
 }
-
 
 // ELEMENTO PASSIVO 2 = Portal
 void *portal() {
