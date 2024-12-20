@@ -178,9 +178,9 @@ int colide(uint16_t prox_pos_x, uint16_t prox_pos_y) {
             } else if (labirinto[i][j] == 'x') {
                 return 3; //Estrela
             } else if (labirinto[i][j] == 'v') {
-                return 4;
+                return 4; //Portal
             } else if (labirinto[i][j] == 'K') {
-                return 5;
+                return 5; //Borda
             } 
         }
     }
