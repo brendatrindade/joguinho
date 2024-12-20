@@ -507,7 +507,6 @@ void *elemento_passivo() {
             exibe_sprite(1, p_estrela.pos_xy_20b, 9, 15);
         }
         pthread_mutex_unlock(&p_estrela.mutex);
-        usleep(1000);
     }
 }
 
