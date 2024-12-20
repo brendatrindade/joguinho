@@ -532,11 +532,11 @@ void *portal() {
 
         //posiciona o portal longe das posicoes iniciais
         if (pos_x_portal > 540 && pos_y_portal > 380){
-            pos_x_portal -= 100;
-            pos_y_portal -= 100;
+            pos_x_portal -= 240;
+            pos_y_portal -= 180;
         } else if (pos_x_portal < 140 && pos_y_portal < 180){
-            pos_x_portal += 100;
-            pos_y_portal += 100;
+            pos_x_portal += 240;
+            pos_y_portal += 120;
         }
 
         colidiu = colide(pos_x_portal, pos_y_portal); 
