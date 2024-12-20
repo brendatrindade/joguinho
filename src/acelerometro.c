@@ -208,7 +208,7 @@ int configurar_acelerometro(){
    printf("Calibrando acelerometro...\n");
    calibrar_acelerometro(&offset_x, &offset_y);
 
-   printf("Calibrado! Iniciando leituras...\n");
+   printf("Calibrado!\n");
    return 0;
 }
 
@@ -236,26 +236,11 @@ int define_velocidade(float valor_g) {
 int get_movimento(int *velocidade){
    inicializar_i2c();
    inicializar_acelerometro();
-
    int16_t x_bruto, y_bruto;
-   float x_g, y_g;
    
    usleep(10000);
 
    ler_aceleracao_xy(&x_bruto, &y_bruto);
-
-   float fator;
-   fator = (mg_por_lsb / 1000);
-
-   int valor_x, valor_y;
-   valor_x = (x_bruto - offset_x);
-   valor_y = (y_bruto - offset_y);
-
-   x_g = valor_x * fator;
-   y_g = valor_y * fator;
-
-   //printf("\nBruto: \nX: %d Y: %d\n-------------------------\n", x_bruto, y_bruto);
-   //printf("\nEm g: \nX: %.2f Y: %.2f\n", x_g, y_g); 
 
    if ( (x_bruto > FILTRO_MOVIMENTO) && (x_bruto > y_bruto)) { //movimento no eixo x+
       //printf("movimento x+\n");
