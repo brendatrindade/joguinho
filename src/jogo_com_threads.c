@@ -25,6 +25,7 @@ extern int acess_btn();
 #define LARGURA_LAB 80  // Largura do labirinto
 #define ESPESSURA 4     // Espessura das paredes e caminhos
 #define mascara_10bits 0b1111111111
+#define mascara_9bits 0b111111111
 
 extern int abre_mouse();
 extern int le_mouse_orientacao(int fd);
@@ -39,9 +40,11 @@ int dy[] = {-1, 1, 0, 0};
 
 // Dados dos jogadores p1 e p2
 typedef struct {
+    uint32_t pos_xy_inicial;
     uint32_t pos_xy_20b;
     pthread_mutex_t mutex;
     int ativo;
+    int vidas;
 } Dados_jogador;
 
 // Dados do elemento passivo 1
@@ -76,9 +79,10 @@ void def_saidas_labirinto();
 void def_posicao_jogadores();
 void def_borda_labirinto();
 void posiciona_sprites(uint32_t *pos_xy_20b_p1, uint32_t *pos_xy_20b_p2);
+void apaga_sprite();
 int main();
 
-// Função para inicializar o labirinto com paredes
+// Função para inicializar o labirinto com paredes (caractere '#').
 void inicializaLabirinto() {
     for (int i = 0; i < ALTURA_LAB; i++) {
         for (int j = 0; j < LARGURA_LAB; j++) {
@@ -87,15 +91,6 @@ void inicializaLabirinto() {
     }
 }
 
-// Função para imprimir o labirinto
-void imprimeLabirintoTerminal() {
-    for (int i = 0; i < ALTURA_LAB; i++) {
-        for (int j = 0; j < LARGURA_LAB; j++) {
-            printf("%c", labirinto[i][j]);
-        }
-        printf("\n");
-    }
-}
 
 // Função para verificar se a posição é válida e se pode ser cavada
 int validaPosicao(int x, int y) {
@@ -104,6 +99,7 @@ int validaPosicao(int x, int y) {
     }
     return labirinto[x][y] == '#'; // Cavar apenas se a posição for parede
 }
+
 
 // Função recursiva para gerar o labirinto
 void geraLabirinto(int x, int y) {
@@ -138,6 +134,7 @@ void geraLabirinto(int x, int y) {
     }
 }
 
+
 void imprimeLabirintoVGA() {
     altera_cor_bg(BRANCO, 0); //pintando fundo
     int i, j;
@@ -152,6 +149,7 @@ void imprimeLabirintoVGA() {
     }
 }
 
+
 void apagaLabirinto() {
     apaga_cor_bg(0);
     int i, j;
@@ -162,6 +160,14 @@ void apagaLabirinto() {
     }
 }
 
+// Apaga todos os sprites da tela.
+void apaga_sprite(){
+    exibe_sprite(0, 0, 1, 1);
+    exibe_sprite(0, 0, 2, 2);
+    exibe_sprite(0, 0, 4, 10);
+    exibe_sprite(0, 0, 9, 15);
+}
+
 //Verifica inicio e fim do sprite
 int colide(uint16_t prox_pos_x, uint16_t prox_pos_y) { 
     int verifica_x[] = {prox_pos_x, prox_pos_x + 19};
@@ -170,8 +176,8 @@ int colide(uint16_t prox_pos_x, uint16_t prox_pos_y) {
     for( q= 0; q < 2; q++) {
         for( w = 0; w < 2; w++) {
             converte_sprite_para_labirinto(verifica_x[q], verifica_y[w], &i, &j);
+            printf("lab = %c\n", labirinto[i][j]);
             if (labirinto[i][j] == '#') {
-                //printf("Tem parede - labirinto %d,%d = %c\n", i,j, labirinto[i][j]);
                 return 1; //Tem parede
             } else if (labirinto[i][j] == 'F') {
                 return 2; //Saida Fechada
@@ -179,24 +185,30 @@ int colide(uint16_t prox_pos_x, uint16_t prox_pos_y) {
                 return 3; //Estrela
             } else if (labirinto[i][j] == 'v') {
                 return 4;
-                //printf("Portal, ganhou o jogo! - labirinto %d,%d = %c\n", i,j, labirinto[i][j]);
             }     
         }
     }
-    //printf("Sem parede \n");
-    return 0; //Sem colisao 
+    return 0;
 }
+
 
 void *move_acelerometro() {
     int direcao_sprite, movimento, colidiu;
     uint16_t pos_x, pos_y, prox_pos_y, prox_pos_x;
     int velocidade = 1;   
     p1_acelerometro.ativo = 1;
+    p1_acelerometro.vidas = 3;
+    int v1 = 1;
+    int v2 = 1;
+    int v3 = 1;
+
+    def_vidas_p1(v1, v2, v3);
 
     uint32_t pos_xy_20b_ant = p1_acelerometro.pos_xy_20b; //inicia com posicao anterior igual a posicao atual
 
     while (p1_acelerometro.ativo) {
         pthread_mutex_lock(&p1_acelerometro.mutex);
+
 
         pos_y = (p1_acelerometro.pos_xy_20b & mascara_10bits);
         pos_x = ((p1_acelerometro.pos_xy_20b >> 10) & mascara_10bits);
@@ -244,15 +256,34 @@ void *move_acelerometro() {
                 pos_x = prox_pos_x; 
             }
         }
-        if (colidiu == 4){
-            animacao_menu_win_1(); //Portal, p1 ganhou o jogo!
-        }
         p1_acelerometro.pos_xy_20b = (pos_x << 10 | pos_y);
 
+        if (colidiu == 3){
+            if (p1_acelerometro.vidas == 3){
+                v1 = 0;
+            } else if (p1_acelerometro.vidas == 2){
+                v2 = 0;
+            } else if (p1_acelerometro.vidas == 1){
+                v3 = 0;
+            }
+            p1_acelerometro.vidas -= 1;
+            def_vidas_p1(v1, v2, v3);
+            p1_acelerometro.pos_xy_20b = p1_acelerometro.pos_xy_inicial;
+        }
+        if (colidiu == 4){
+            apaga_sprite();
+            animacao_menu_win_1(); //Portal, p1 ganhou o jogo!
+        }
+
+        if (p1_acelerometro.vidas == 0) {
+            apaga_sprite();
+            animacao_menu_win_2();
+        } 
         pthread_mutex_unlock(&p1_acelerometro.mutex);
-        usleep(10000);
+        //usleep(10000);
     }
 }
+
 
 void *move_mouse() {
     int fd, direcao, orientacao, colidiu, movimento;
@@ -260,6 +291,10 @@ void *move_mouse() {
     int velocidade = 1;  
     fd = abre_mouse();
     p2_mouse.ativo = 1;
+    p2_mouse.vidas = 3;
+        
+    def_vidas_p2(1,1,1);
+
 
     uint32_t pos_xy_20b_ant = p2_mouse.pos_xy_20b;
     
@@ -306,16 +341,26 @@ void *move_mouse() {
                 pos_x = prox_pos_x; 
             }
         }
+        p2_mouse.pos_xy_20b = (pos_x << 10 | pos_y);
+
+        if (colidiu == 3){
+            p2_mouse.vidas -= 1;
+            p2_mouse.pos_xy_20b = p2_mouse.pos_xy_inicial;
+        }
         if (colidiu == 4){
+            apaga_sprite();
+            int i;
+            for ( i = 0; i < 10; i++){}
             animacao_menu_win_2(); //Portal, p2 ganhou o jogo!
         }
-
-        p2_mouse.pos_xy_20b = (pos_x << 10 | pos_y);
-        
+        if (p2_mouse.vidas == 0) {
+            apaga_sprite();
+            animacao_menu_win_1();
+        } 
         pthread_mutex_unlock(&p2_mouse.mutex);
-        usleep(10000);
     }
 }
+
 
 void def_saidas_labirinto(){
     // Coloca as saídas
@@ -343,8 +388,23 @@ void def_saidas_labirinto(){
 
 void def_posicao_jogadores(){
     // Posiciona o p1 e p2
+    uint16_t pos_x_p1, pos_y_p1, pos_x_p2, pos_y_p2;
+    uint32_t pos_xy_20b_p1, pos_xy_20b_p2;
+
     labirinto[ESPESSURA][1] = '1';
     labirinto[ALTURA_LAB - ESPESSURA - 4][LARGURA_LAB - ESPESSURA - 4] = '2';
+    converte_labirinto_para_sprite(ESPESSURA, 1, &pos_x_p1, &pos_y_p1);
+    pos_x_p1 &= mascara_10bits;
+    pos_y_p1 &= mascara_10bits;
+    pos_xy_20b_p1 = (pos_x_p1 << 10 | pos_y_p1);
+    p1_acelerometro.pos_xy_inicial = pos_xy_20b_p1;
+
+    converte_labirinto_para_sprite((ALTURA_LAB - ESPESSURA - 4), (LARGURA_LAB - ESPESSURA - 4), &pos_x_p2, &pos_y_p2);
+    pos_x_p2 &= mascara_10bits;
+    pos_y_p2 &= mascara_10bits;
+    pos_xy_20b_p2 = (pos_x_p2 << 10 | pos_y_p2);
+    p2_mouse.pos_xy_inicial = pos_xy_20b_p2;
+
 }
 
 void def_borda_labirinto(){
@@ -356,6 +416,62 @@ void def_borda_labirinto(){
         }
     }
 }
+
+void def_vidas_p1(int v1, int v2, int v3){
+    uint16_t pos_x_p1, pos_y_p1, pos_x_p2, pos_y_p2;
+    uint32_t pos_xy_20b_p1;
+
+    converte_labirinto_para_sprite(10, 76, &pos_x_p1, &pos_y_p1);
+    pos_x_p1 &= mascara_10bits;
+    pos_y_p1 &= mascara_10bits;
+    pos_xy_20b_p1 = (pos_x_p1 << 10 | pos_y_p1);
+    exibe_sprite(v1, pos_xy_20b_p1, 15, 16);
+    converte_labirinto_para_sprite(15, 76, &pos_x_p1, &pos_y_p1);
+    pos_x_p1 &= mascara_10bits;
+    pos_y_p1 &= mascara_10bits;
+    pos_xy_20b_p1 = (pos_x_p1 << 10 | pos_y_p1);
+    exibe_sprite(v2, pos_xy_20b_p1, 15, 17);
+    converte_labirinto_para_sprite(20, 76, &pos_x_p1, &pos_y_p1);
+    pos_x_p1 &= mascara_10bits;
+    pos_y_p1 &= mascara_10bits;
+    pos_xy_20b_p1 = (pos_x_p1 << 10 | pos_y_p1);
+    exibe_sprite(v3, pos_xy_20b_p1, 15, 18);
+}
+
+void def_vidas_p2(int v1, int v2, int v3){
+    uint16_t pos_x_p1, pos_y_p1, pos_x_p2, pos_y_p2;
+    uint32_t pos_xy_20b_p1;
+
+    converte_labirinto_para_sprite(35, 76, &pos_x_p1, &pos_y_p1);
+    pos_x_p1 &= mascara_10bits;
+    pos_y_p1 &= mascara_10bits;
+    pos_xy_20b_p1 = (pos_x_p1 << 10 | pos_y_p1);
+    exibe_sprite(v1, pos_xy_20b_p1, 15, 19);
+    converte_labirinto_para_sprite(40, 76, &pos_x_p1, &pos_y_p1);
+    pos_x_p1 &= mascara_10bits;
+    pos_y_p1 &= mascara_10bits;
+    pos_xy_20b_p1 = (pos_x_p1 << 10 | pos_y_p1);
+    exibe_sprite(v2, pos_xy_20b_p1, 15, 20);
+    converte_labirinto_para_sprite(45, 76, &pos_x_p1, &pos_y_p1);
+    pos_x_p1 &= mascara_10bits;
+    pos_y_p1 &= mascara_10bits;
+    pos_xy_20b_p1 = (pos_x_p1 << 10 | pos_y_p1);
+    exibe_sprite(v3, pos_xy_20b_p1, 15, 21);
+}
+
+void def_vidas2(){
+    uint16_t pos_x_p1, pos_y_p1;
+    uint32_t pos_xy_18;
+
+    converte_labirinto_para_sprite(64, 1, &pos_x_p1, &pos_y_p1);
+    pos_x_p1 &= mascara_9bits;
+    pos_y_p1 &= mascara_9bits;
+    pos_xy_18 = (pos_x_p1 << 9 | pos_y_p1);   
+    //desenha_poligono(510, 2, 1, 16);             
+    desenha_poligono(VERDE, 1, 1, pos_xy_18);
+
+}
+
 
 void posiciona_sprites(uint32_t *pos_xy_20b_p1, uint32_t *pos_xy_20b_p2){
     //posicao inicial p1 e p2
@@ -369,7 +485,8 @@ void posiciona_sprites(uint32_t *pos_xy_20b_p1, uint32_t *pos_xy_20b_p2){
                 pos_x_p1 &= mascara_10bits;
                 pos_y_p1 &= mascara_10bits;
                 *pos_xy_20b_p1 = (pos_x_p1 << 10 | pos_y_p1);
-                exibe_sprite(1, *pos_xy_20b_p1, 1, 1);
+                p1_acelerometro.pos_xy_inicial = *pos_xy_20b_p1;
+                //exibe_sprite(1, *pos_xy_20b_p1, 1, 1);
             }
             if(labirinto[i][j] == '2'){
                 //printf("Sprite 2 - x lab: %d y lab: %d\n", i ,j);
@@ -377,16 +494,13 @@ void posiciona_sprites(uint32_t *pos_xy_20b_p1, uint32_t *pos_xy_20b_p2){
                 pos_x_p2 &= mascara_10bits;
                 pos_y_p2 &= mascara_10bits;
                 *pos_xy_20b_p2 = (pos_x_p2 << 10 | pos_y_p2);
-                exibe_sprite(1, *pos_xy_20b_p2, 2, 2);
+                p2_mouse.pos_xy_inicial = *pos_xy_20b_p2;
+                //exibe_sprite(1, *pos_xy_20b_p2, 2, 2);
             }
         }
     }
 }
 
-void apaga_sprite(){
-    exibe_sprite(0, 0, 1, 1);
-    exibe_sprite(0, 0, 2, 2);
-}
 
 // ELEMENTO PASSIVO = SPRITE APARECENDO EM LUGARES ALEATÓRIOS
 void *elemento_passivo() {
@@ -404,6 +518,8 @@ void *elemento_passivo() {
     while(p_estrela.ativo) {
         pthread_mutex_lock(&p_estrela.mutex);
         
+        int i_ant, j_ant;
+
         srand((unsigned)time(NULL));  // Inicializa o gerador de números aleatórios
         pos_x_passivo = (rand() % 640) + 1;  
         pos_y_passivo = (rand() % 480) + 1; 
@@ -412,23 +528,26 @@ void *elemento_passivo() {
         
         if (!colidiu) {
             converte_sprite_para_labirinto(pos_x_passivo, pos_y_passivo, &i, &j);
-            labirinto[i][j] == 'x';
+            labirinto[i_ant][j_ant] = ' ';
+
+            i_ant = i;
+            j_ant = j;
+
+            labirinto[i][j] = 'x';
             
-            // apaga o sprite exibido na posicao anterior
-            exibe_sprite(0, pas_xy_ant, 9, 15);
             //animacao_estrela(pas_xy_ant, 0);
             pos_x_passivo &= mascara_10bits;
             pos_y_passivo &= mascara_10bits;
             p_estrela.pos_xy_20b = (pos_x_passivo << 10 | pos_y_passivo);
         
             // exibe o sprite na posicao atual
-            exibe_sprite(1, p_estrela.pos_xy_20b, 9, 15); // sp = 1 -> habilita sprite
+            exibe_sprite(1, p_estrela.pos_xy_20b, 9, 15);
 
             //animacao_estrela( p_estrela.pos_xy_20b, 1);
-            pas_xy_ant = p_estrela.pos_xy_20b;
+            //pas_xy_ant = p_estrela.pos_xy_20b;
         }
         pthread_mutex_unlock(&p_estrela.mutex);
-        usleep(10000);
+        usleep(1000);
     }
 }
 
@@ -464,7 +583,7 @@ void *portal() {
         
         if (!colidiu) {
             converte_sprite_para_labirinto(pos_x_portal, pos_y_portal, &i, &j);
-            labirinto[i][j] == 'v';
+            labirinto[i][j] = 'v';
                 
             //apaga o sprite exibido na posicao anterior
             //exibe_sprite(0, pos_ant_portal, 4, 16);
@@ -483,24 +602,10 @@ void *portal() {
         }
     } while ( colidiu );
     pthread_mutex_unlock(&p_estrela.mutex);
-    while(p_portal.ativo) {}
+    //while(p_portal.ativo) {}
 }
 
 int main(){
-    inicializa_fpga();
-    
-    apaga_sprite();
-
-    // Inicializa mutexes
-    pthread_mutex_init(&p1_acelerometro.mutex, NULL);
-    pthread_mutex_init(&p2_mouse.mutex, NULL);
-    pthread_mutex_init(&p_estrela.mutex, NULL);
-    pthread_mutex_init(&p_portal.mutex, NULL);
-
-    for (int i = 0; i < 50; i++) {
-        apagaLabirinto();
-    }
-
     srand(time(NULL)); // Semente para números aleatórios
 
     inicializaLabirinto();
@@ -513,20 +618,37 @@ int main(){
     def_posicao_jogadores();
     def_borda_labirinto();
 
-    //imprimeLabirintoTerminal();
+    inicializa_fpga();
 
-    configurar_acelerometro();
+    apaga_sprite();
+        
     grava_sprite_ovni();
     grava_sprite_portal();
     grava_sprite_estrela();
 
-    animacao_menu();
+    posiciona_sprites(&p1_acelerometro.pos_xy_20b, &p2_mouse.pos_xy_20b);
 
     for (int i = 0; i < 50; i++) {
         apagaLabirinto();
     }
 
-    posiciona_sprites(&p1_acelerometro.pos_xy_20b, &p2_mouse.pos_xy_20b);
+    // Inicializa mutexes
+    pthread_mutex_init(&p1_acelerometro.mutex, NULL);
+    pthread_mutex_init(&p2_mouse.mutex, NULL);
+    pthread_mutex_init(&p_estrela.mutex, NULL);
+    pthread_mutex_init(&p_portal.mutex, NULL);
+
+    configurar_acelerometro();
+
+    animacao_menu();
+
+    exibe_sprite(1, p1_acelerometro.pos_xy_inicial, 1, 1);
+    exibe_sprite(1, p2_mouse.pos_xy_inicial, 2, 2);
+
+
+    for (int i = 0; i < 50; i++) {
+        apagaLabirinto();
+    }
 
     for (int i = 0; i < 1200; i++) {
         imprimeLabirintoVGA();
