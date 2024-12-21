@@ -4,13 +4,14 @@
 
 <h4 align="center">Projeto da disciplina TEC 499 - Sistemas Digitais - TP04 | Grupo 02</h4>
 
+
 ## Sumário
 - [Visão Geral do Projeto](#Visão-Geral-do-Projeto)
-- [Requisitos](#Requisitos)
-- [Como usamos nossa biblioteca?](#Como usamos nossa biblioteca?)
+- [Sobre o Lost in Space](#Sobre-o-Lost-in-Space)
+- [Uso da GraphLib](#Uso-da-GraphLib)
 - [Colisão](#Colisão)
 - [Mouse](#Mouse)
-- [Labirinto randômico](#Labirinto randômico)
+- [Labirinto randômico](#Labirinto-randômico)
 - [Tecnologias e Ferramentas utilizadas](#Tecnologias-e-Ferramentas-utilizadas)
 - [Configurações de Ambiente e Execução](#Configurações-de-Ambiente-e-Execução)
 - [Desenvolvedoras](#Desenvolvedoras)
@@ -18,14 +19,36 @@
 
 
 # Visão Geral do Projeto
-O objetivo central do problema 3 foi desenvolver um jogo em C, utilizando a biblioteca em assembly com funções gráficas para poder manipular a GPU feita pelo estudante Gabriel Sá Barreto. No momento, essa GPU se encontra na placa que estamos utilizando para desenvolver o problema, a DE1-SOC.
-O trabalho de Conclusão de Curso de Gabriel pode ser acessado em: https://drive.google.com/file/d/1MlIlpB9TSnoPGEMkocr36EH9-CFz8psO/view
+O objetivo central do Problema 3 foi desenvolver um jogo multiplayer em C, utilizando a biblioteca desenvolvida no [Problema 2](https://github.com/sarinhasf/Biblioteca-GPU). A descrição completa do problema juntamente com os requisitos pode ser acessada em 
+[Descrição do problema.pdf](<assets/Descrição do problema.pdf>).
 
-# Requisitos 
-- Desenvolver um jogo em C
-- Utilizar a biblioteca em Assembly para manipular as funções gráficas do Processador Gráfico feito por Gabriel Sá Barreto.
+A ideia do jogo foi inspirada em um mangá conhecido como: Astra lost in Space. Dessa forma, temos um labirinto e dois jogadores representados por naves alienígenas  O objetivo é que os jogadores andem pelo labirinto a procura desse buraco negro, ganha quem encontrar o buraco negro primeiro em menos tempo, porém no meio do caminho podem aparecer algumas surpresas… 
 
-# Como usamos nossa biblioteca?
+# Sobre o Lost in Space
+
+## Sinopse
+Vocês são dois aliens perdidos pelo espaço que tem o objetivo de voltar para casa através de um buraco negro, porém o buraco negro suporta somente uma nave que levará ao planeta natal… Dessa forma, vocês estão perdidos no espaço a proucura do buraco negro que os levará para casa, porém somente um irá voltar!
+
+## Características
+
+<div align="center">  
+  <img align="center" width=60% src= assets/imagens/sobre.gif alt="Sobre">
+</div>
+
+| **Elemento** | **Funcionalidade**                                                                                        |
+|--------------|-----------------------------------------------------------------------------------------------------------|
+| Nave 1       | Nave a ser movimentada com o acelerômetro.                                                                |
+| Nave 2       | Nave a ser movimentada com o mouse.                                                                       |
+| Buraco negro | Ponto final do jogo.                                                                                      |
+| Estrela      | Os elementos passivos que vão aparecer pelo labirinto, caso toque em um jogador, ele volta para o início. |
+| Labirinto    | Labirinto que se autogera, assim, toda partida temos um labirinto diferente.                              |
+
+<div align="center">  
+  <img align="center" width=60% src= assets/imagens/controle-do-jogo.png alt="Controle do jogo">
+  <p><em>Controle do jogo</em></p>
+</div>
+
+# Uso da GraphLib
 
 # Colisão
 
