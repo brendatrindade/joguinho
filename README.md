@@ -22,7 +22,8 @@
 O objetivo central do Problema 3 foi desenvolver um jogo multiplayer em C, utilizando a biblioteca desenvolvida no [Problema 2](https://github.com/sarinhasf/Biblioteca-GPU). A descrição completa do problema juntamente com os requisitos pode ser acessada em 
 [Descrição do problema.pdf](<assets/Descrição do problema.pdf>).
 
-A ideia do jogo foi inspirada em um mangá conhecido como: Astra lost in Space. Dessa forma, temos um labirinto e dois jogadores representados por naves alienígenas  O objetivo é que os jogadores andem pelo labirinto a procura desse buraco negro, ganha quem encontrar o buraco negro primeiro em menos tempo, porém no meio do caminho podem aparecer algumas surpresas… 
+A ideia do jogo foi inspirada em um mangá conhecido como: Astra Lost in Space. Dessa forma, temos um labirinto e dois jogadores representados por naves alienígenas  O objetivo é que os jogadores andem pelo labirinto a procura desse buraco negro, ganha quem encontrar o buraco negro primeiro em menos tempo, porém no meio do caminho podem aparecer algumas surpresas… 
+
 
 # Sobre o Lost in Space
 
@@ -30,10 +31,6 @@ A ideia do jogo foi inspirada em um mangá conhecido como: Astra lost in Space. 
 Vocês são dois aliens perdidos pelo espaço que tem o objetivo de voltar para casa através de um buraco negro, porém o buraco negro suporta somente uma nave que levará ao planeta natal… Dessa forma, vocês estão perdidos no espaço a proucura do buraco negro que os levará para casa, porém somente um irá voltar!
 
 ## Características
-
-<div align="center">  
-  <img align="center" width=60% src= assets/imagens/sobre.gif alt="Sobre">
-</div>
 
 | **Elemento** | **Funcionalidade**                                                                                        |
 |--------------|-----------------------------------------------------------------------------------------------------------|
@@ -50,11 +47,25 @@ Vocês são dois aliens perdidos pelo espaço que tem o objetivo de voltar para 
 
 # Uso da GraphLib
 
+
 # Colisão
+
 
 # Mouse 
 
+
 # Labirinto randômico
+Com intuito de tornar a jogo mais **desafiador** e **diverso**, a geração do labirinto foi implementada de forma randômica. Para tornar isso possível, utilizamos o Algorimo Depth First Search (DFS)  e a ideia partiu do artigo de Rômulo C. Menezes Jr [3].
+
+Primeiro o labirinto é inicializado com todas as posições sinalizadas como parede ('#'). Em seguida, é chamada a função recursiva *geraLabirinto(int x, int y)*.
+
+O algoritmo funciona marcando um ponto inicial, explorando recursivamente caminhos adjacentes aleatórios. Quando não há mais caminhos válidos, o algoritmo retorna ao estado anterior para continuar a exploração.
+
+<div align="center">  
+  <img align="center" width=60% src= assets/imagens/fluxograma-labirinto.png alt="Fluxograma da geração do labirinto">
+  <p><em>Fluxograma da geração do labirinto</em></p>
+</div>
+
 
 # Tecnologias e Ferramentas utilizadas
 - **Hardwares:**   
@@ -66,6 +77,7 @@ Vocês são dois aliens perdidos pelo espaço que tem o objetivo de voltar para 
 - **Compilador:** GCC  
 - **Controle de Versão:** Git     
 - **Ferramenta de Sistema:** Terminal Linux (Ubuntu)
+
 
 # Configurações de Ambiente e Execução
 Para ter acesso ao projeto, clone o repositório disponível na plataforma GitHub utilizando o seguinte comando no terminal Linux:
