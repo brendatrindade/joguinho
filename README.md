@@ -1,5 +1,5 @@
-<div align="center">  
-  <h4 align="center">Capa Lost in Space</h4>
+<div align="center">   
+  <img align="center" width=100% src="https://github.com/brendatrindade/Lost-in-Space/blob/main/assets/imagens/Lost%20In%20Space%20-%20SD%2003.gif" alt="LostInSpace">
 </div>
 
 <h4 align="center">Projeto da disciplina TEC 499 - Sistemas Digitais - TP04 | Grupo 02</h4>
