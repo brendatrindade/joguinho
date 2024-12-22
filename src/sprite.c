@@ -434,7 +434,7 @@ void animacao_portal(uint32_t pos_xy_20b, int sp){
         int i;
         for (i=4; i<8; i++){
             exibe_sprite(sp, pos_xy_20b, i, 10);
-            usleep(10000);
+            usleep(100000);
         }
     }
 }

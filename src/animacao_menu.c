@@ -18,6 +18,7 @@ void apaga_menu();
 void animacao_menu();
 int main();
 int button();
+int verificaBtn();
 
 //Dados da imagem para formar um menu (60x80) em formato RRRGGGBB - 1 byte por pixel
 uint16_t dados_do_menu0[altura_menu][largura_menu] = {
@@ -184,28 +185,51 @@ void apaga_menu() {
     }
 }
 
+int verificaBtn(int n){
+    if(n != 5){
+        return 1; //é pra sair
+    } else{
+        return 0; //não é pra sair
+    }
+}
+
 void animacao_menu(){    
     int btn = button();
     while (btn == 5) {        
         btn = button();
         int i;
         for (i=0; i<50; i++){
+            btn = button();
+            if(verificaBtn(btn)){
+                break;
+            }
             cria_menu(dados_do_menu0);
         }
-        btn = button();
-        usleep(100000);
-        for (i=0; i<50; i++){
-            cria_menu(dados_do_menu1);
+        for(i=0; i<500;i++){
+            btn = button();
+            if(verificaBtn(btn)){
+                break;
+            }
         }
-        btn = button();
-        usleep(100000);
+        for (i=0; i<50; i++){
+            btn = button();
+            cria_menu(dados_do_menu1);
+            if(verificaBtn(btn)){
+                break;
+            }
+        }
+        for(i=0; i<500;i++){
+            btn = button();
+            if(verificaBtn(btn)){
+                break;
+            }
+        }
     }
 }
 
 int button() {
   int btn;
     btn = acess_btn();
-    printf("%d\n", btn);
     if(btn == 15){
         //printf("Não esta apertando nenhum botão \n");
         return 5;
@@ -221,8 +245,6 @@ int button() {
     } else if (btn == 7) {
         //printf("Print botão: 3 \n");
         return 3;
-    } else {
-        printf("cai aq");
     }
 }
 

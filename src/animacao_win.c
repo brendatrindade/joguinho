@@ -375,58 +375,66 @@ void animacao_menu_win(){
     }
 }
 
-void imprime_poligono(uint32_t *pos_xy_18, uint32_t *pos_xy2_18){
+void imprime_poligono(uint32_t *pos_xy_18){
     uint16_t pos_x_p1, pos_y_p1, pos_x_p2, pos_y_p2;
 
     converte_labirinto_para_sprite(1, 1, &pos_x_p1, &pos_y_p1);
     pos_x_p1 &= mascara_9bits;
     pos_y_p1 &= mascara_9bits;
     *pos_xy_18 = (pos_x_p1 << 9 | pos_y_p1);   
-    desenha_poligono(ROXO_ESCURO, 1, 1, *pos_xy_18);
-
-    converte_labirinto_para_sprite(5, 1, &pos_x_p2, &pos_y_p2);
-    pos_x_p2 &= mascara_9bits;
-    pos_y_p2 &= mascara_9bits;
-    *pos_xy2_18 = (pos_x_p1 << 9 | pos_y_p1);   
-    desenha_poligono(ROXO_ESCURO, 1, 2, *pos_xy2_18);
+    desenha_poligono(AZUL_ESCURO, 1, 2, *pos_xy_18);
 }
 
-void apaga_poligono(uint32_t *pos_xy_18, uint32_t *pos_xy2_18){
-    desenha_poligono(APAGA, 1, 1, *pos_xy_18);             
-    desenha_poligono(APAGA, 1, 2, *pos_xy2_18);
+void apaga_poligono(uint32_t *pos_xy_18){
+    desenha_poligono(APAGA, 1, 2, *pos_xy_18);             
 }
+
+// Apaga todos os sprites da tela.
+void apaga_sprite_win(){
+    exibe_sprite(0, 0, 1, 1);
+    exibe_sprite(0, 0, 2, 2);
+    exibe_sprite(0, 0, 4, 10);
+    exibe_sprite(0, 0, 9, 15);
+    exibe_sprite(0, 0, 15, 16);
+    exibe_sprite(0, 0, 15, 17);
+    exibe_sprite(0, 0, 15, 18);
+    exibe_sprite(0, 0, 15, 19);
+    exibe_sprite(0, 0, 15, 20);
+    exibe_sprite(0, 0, 15, 21);
+}
+
 
 void animacao_menu_win_1(){
     uint32_t pos_xy_18, pos_xy2_18;
-    int i;    
-    while (1) {        
+    int i;
+    apaga_sprite_win();    
+    while (1) {    
         for (i=0; i<50; i++){
             cria_menu_win(dados_do_menu_win1);
         }
-        usleep(100000);
-        imprime_poligono(&pos_xy_18, &pos_xy2_18);
+        imprime_poligono(&pos_xy_18);
+        usleep(10000);
         for (i=0; i<50; i++){
             cria_menu_win(dados_do_menu_win1_2);
         }
-        apaga_poligono(&pos_xy_18, &pos_xy2_18);
-        usleep(100000);
+        usleep(10000);
     }
 }
 
 void animacao_menu_win_2(){
-    uint32_t pos_xy_18, pos_xy2_18;
-    int i;    
-    while (1) {        
+    uint32_t pos_xy_18;
+    int i;
+    apaga_sprite_win();        
+    while (1) {
         for (i=0; i<50; i++){
             cria_menu_win(dados_do_menu_win2);
         }
-        usleep(100000);
-        imprime_poligono(&pos_xy_18, &pos_xy2_18);
+        imprime_poligono(&pos_xy_18);
+        usleep(10000);
         for (i=0; i<50; i++){
             cria_menu_win(dados_do_menu_win2_1);
         }
-        apaga_poligono(&pos_xy_18, &pos_xy2_18);
-        usleep(100000);
+        usleep(10000);
     }
 }
 
