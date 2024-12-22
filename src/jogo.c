@@ -21,15 +21,32 @@ extern void apaga_cor_bg(uint8_t registrador);
 extern void exibe_sprite(uint8_t sp, uint32_t xy, uint16_t offset, uint8_t registrador);
 extern int acess_btn();
 
+extern int abre_mouse();
+extern int get_movimento_mouse(int fd, int *velocidade);
+
+void inicializaLabirinto();
+int validaPosicao(int x, int y);
+void geraLabirinto(int x, int y);
+void imprimeLabirintoVGA();
+void apagaLabirinto();
+int colide(uint16_t prox_pos_x, uint16_t prox_pos_y);
+void *move_acelerometro();
+void *move_mouse();
+void def_saidas_labirinto();
+void def_posicao_jogadores();
+void def_borda_labirinto();
+void posiciona_sprites(uint32_t *pos_xy_20b_p1, uint32_t *pos_xy_20b_p2);
+void apaga_sprite();
+void *elemento_passivo();
+void *portal();
+int montaJogo();
+void finalizaJogo();
+int main();
+
 #define ALTURA_LAB 60  // Altura do labirinto
 #define LARGURA_LAB 80 // Largura do labirinto
 #define ESPESSURA 4    // Espessura das paredes e caminhos
 #define mascara_10bits 0b1111111111
-
-extern int abre_mouse();
-extern int le_mouse_orientacao(int fd);
-extern int le_mouse_direcao(int fd, uint16_t *x, uint16_t *y);
-extern int teste_leitura(int fd);
 
 char labirinto[ALTURA_LAB][LARGURA_LAB];
 
@@ -65,23 +82,6 @@ Dados_jogador p2_mouse;
 Dados_Estrela p_estrela;
 Dados_Portal p_portal;
 
-void inicializaLabirinto();
-void imprimeLabirintoTerminal();
-int validaPosicao(int x, int y);
-void geraLabirinto(int x, int y);
-void imprimeLabirintoVGA();
-void apagaLabirinto();
-int colide(uint16_t prox_pos_x, uint16_t prox_pos_y);
-void *move_acelerometro();
-void *move_mouse();
-void def_saidas_labirinto();
-void def_posicao_jogadores();
-void def_borda_labirinto();
-void posiciona_sprites(uint32_t *pos_xy_20b_p1, uint32_t *pos_xy_20b_p2);
-void apaga_sprite();
-int main();
-int montaJogo();
-
 // Cria as threads
 pthread_t thread_acel, thread_mouse, thread_passiva, thread_portal;
 
@@ -101,7 +101,6 @@ int validaPosicao(int x, int y) {
     }
     return labirinto[x][y] == '#'; // Cavar apenas se a posição for parede
 }
-
 
 // Função recursiva para gerar o labirinto
 void geraLabirinto(int x, int y) {
@@ -134,6 +133,7 @@ void geraLabirinto(int x, int y) {
     }
 }
 
+// Exibe o labirinto no VGA
 void imprimeLabirintoVGA() {
     altera_cor_bg(BRANCO, 0); //pintando fundo
     int i, j;
@@ -148,6 +148,7 @@ void imprimeLabirintoVGA() {
     }
 }
 
+// Apaga o labirinto no VGA
 void apagaLabirinto() {
     apaga_cor_bg(0);
     int i, j;
@@ -172,6 +173,7 @@ void apaga_sprite(){
     exibe_sprite(0, 0, 15, 21);
 }
 
+// Exibe as vidas do p1 no VGA
 void def_vidas_p1(int v1, int v2, int v3){
     uint16_t pos_x_p1, pos_y_p1;
     uint32_t pos_xy_20b_p1;
@@ -195,6 +197,7 @@ void def_vidas_p1(int v1, int v2, int v3){
     exibe_sprite(v3, pos_xy_20b_p1, 15, 18);
 }
 
+// Exibe as vidas do p2 no VGA
 void def_vidas_p2(int v1, int v2, int v3){
     uint16_t pos_x_p2, pos_y_p2;
     uint32_t pos_xy_20b_p2;
@@ -218,7 +221,7 @@ void def_vidas_p2(int v1, int v2, int v3){
     exibe_sprite(v3, pos_xy_20b_p2, 15, 21);
 }
 
-//Verifica inicio e fim do sprite
+//Verifica colisao do inicio e fim do sprite 
 int colide(uint16_t prox_pos_x, uint16_t prox_pos_y) { 
     int verifica_x[] = {prox_pos_x, prox_pos_x + 19};
     int verifica_y[] = {prox_pos_y, prox_pos_y + 19};
@@ -242,6 +245,7 @@ int colide(uint16_t prox_pos_x, uint16_t prox_pos_y) {
     return 0; //Sem colisao
 }
 
+// Move o p1 do acelerometro
 void *move_acelerometro() {
     int direcao_sprite, movimento, colidiu, btn;
     uint16_t pos_x, pos_y, prox_pos_y, prox_pos_x;
@@ -350,6 +354,7 @@ void *move_acelerometro() {
     }
 }
 
+// Move o p2 do mouse
 void *move_mouse() {
     int fd, direcao, orientacao, colidiu, movimento, btn;
     uint16_t pos_x, pos_y, prox_pos_y, prox_pos_x;
@@ -448,6 +453,7 @@ void *move_mouse() {
     }
 }
 
+// Posiciona saidas do labirinto
 void def_saidas_labirinto(){
     // Coloca as saídas
     for (int i = 0; i <= ESPESSURA; i++) {
@@ -472,12 +478,14 @@ void def_saidas_labirinto(){
     labirinto[ALTURA_LAB - ESPESSURA - 1][LARGURA_LAB - ESPESSURA] = 'F';
 }
 
+// Define posicao inicial do p1 e p2 no labirinto
 void def_posicao_jogadores(){
     // Posiciona o p1 e p2
     labirinto[ESPESSURA][1] = '1';
     labirinto[ALTURA_LAB - ESPESSURA - 4][LARGURA_LAB - ESPESSURA - 4] = '2';
 }
 
+// Define borda lateral do labirinto para exibicao das vidas
 void def_borda_labirinto(){
     for(int i = 0; i < ALTURA_LAB; i++) { 
         for(int j = 0; j < LARGURA_LAB; j++) {
@@ -488,7 +496,7 @@ void def_borda_labirinto(){
     }
 }
 
-
+// Exibe os sprites na posicao inicial do p1 e p2 no labirinto
 void posiciona_sprites(uint32_t *pos_xy_20b_p1, uint32_t *pos_xy_20b_p2){
     //posicao inicial p1 e p2
     uint16_t pos_x_p1, pos_y_p1, pos_x_p2, pos_y_p2;
@@ -513,7 +521,7 @@ void posiciona_sprites(uint32_t *pos_xy_20b_p1, uint32_t *pos_xy_20b_p2){
     }
 }
 
-// ELEMENTO PASSIVO = SPRITE APARECENDO EM LUGARES ALEATÓRIOS
+// ELEMENTO PASSIVO => SPRITE APARECENDO EM LUGARES ALEATÓRIOS
 void *elemento_passivo() {
     uint16_t pos_x_passivo, pos_y_passivo, btn;
 

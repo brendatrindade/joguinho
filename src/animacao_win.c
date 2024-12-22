@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 extern void escreve_bloco(uint16_t posicao, uint16_t cor);
+extern void desenha_poligono(uint16_t cor, uint16_t tamanho, uint16_t forma, uint16_t endereco);
 
 #define altura_menu 60
 #define largura_menu 80
@@ -14,6 +15,9 @@ uint16_t converte_em_bgr(uint8_t rgb);
 void cria_menu_win(uint16_t dados_do_menu0[altura_menu][largura_menu]);
 void apaga_menu_win();
 void animacao_menu_win();
+void imprime_poligono(uint32_t *pos_xy_18);
+void apaga_poligono(uint32_t *pos_xy_18);
+void apaga_sprite_win();
 void animacao_menu_win_1();
 void animacao_menu_win_2();
 
@@ -403,7 +407,6 @@ void apaga_sprite_win(){
     exibe_sprite(0, 0, 15, 21);
 }
 
-
 void animacao_menu_win_1(){
     uint32_t pos_xy_18, pos_xy2_18;
     int i;
@@ -437,15 +440,3 @@ void animacao_menu_win_2(){
         usleep(10000);
     }
 }
-
-// int main(){
-//     inicializa_fpga();
-
-//     //animacao_menu_win();
-
-//     apaga_menu_win();
-
-//     fecha_dev_mem();
-
-//     return 0;
-// }
