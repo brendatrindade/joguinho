@@ -53,6 +53,10 @@ Vocês são dois aliens perdidos pelo espaço que tem o objetivo de voltar para 
 
 # Mouse 
 
+<div align="center">  
+  <img align="center" width=50% src="https://github.com/brendatrindade/Lost-in-Space/blob/main/assets/imagens/anima%C3%A7%C3%A3o%20mouse.gif" alt="Comunicacao Mouse">
+  <p><em>Comunicação com o Mouse</em></p>
+</div>
 
 # Labirinto randômico
 Com intuito de tornar a jogo mais **desafiador** e **diverso**, a geração do labirinto foi implementada de forma randômica. Para tornar isso possível, utilizamos o Algorimo Depth First Search (DFS)  e a ideia partiu do artigo de Rômulo C. Menezes Jr [3].
