@@ -6,7 +6,7 @@
 #include <pthread.h>
 #include "proc_grafico.h"
 #include "acelerometro.c"
-#include "mouse_thread.h"
+#include "mouse.h"
 #include "colisao.c"
 #include "sprite.c"
 #include "animacao_menu.c"
@@ -21,9 +21,9 @@ extern void apaga_cor_bg(uint8_t registrador);
 extern void exibe_sprite(uint8_t sp, uint32_t xy, uint16_t offset, uint8_t registrador);
 extern int acess_btn();
 
-#define ALTURA_LAB 60   // Altura do labirinto
-#define LARGURA_LAB 80  // Largura do labirinto
-#define ESPESSURA 4     // Espessura das paredes e caminhos
+#define ALTURA_LAB 60  // Altura do labirinto
+#define LARGURA_LAB 80 // Largura do labirinto
+#define ESPESSURA 4    // Espessura das paredes e caminhos
 #define mascara_10bits 0b1111111111
 
 extern int abre_mouse();
